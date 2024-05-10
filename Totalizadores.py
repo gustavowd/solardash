@@ -26,7 +26,7 @@ with col1:
         df['device_name'],
         default=["Huawei - 21010738716TK4900687", "Huawei - 21010738716TK4900689", "Huawei - 21010738716TK4900706", "Huawei - 21010738716TK6901199", "Huawei - 21010738716TK6901301", "Huawei - 21010738716TK6901324", "Huawei - 21010738716TK6901325"])
 
-days = datetime.timedelta(days=1)
+days = datetime.timedelta(days=6)
 today = datetime.datetime.now()
 yesterday = today - days
 with col2:
