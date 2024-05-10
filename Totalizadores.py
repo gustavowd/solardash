@@ -24,7 +24,7 @@ with col1:
     multi = st.multiselect(
         'Selecione um ou mais dispositivos:',
         df['device_name'],
-        default=["Huawei - 21010738716TK4900687", "Huawei - 21010738716TK4900689", "Huawei - 21010738716TK4900706", "Huawei - 21010738716TK6901199", "Huawei - 21010738716TK6901301", "Huawei - 21010738716TK6901324", "Huawei - 21010738716TK6901325"])
+        default=["Fronius - 29271811", "Huawei - 21010738716TK4900687", "Huawei - 21010738716TK4900689", "Huawei - 21010738716TK4900706", "Huawei - 21010738716TK6901199", "Huawei - 21010738716TK6901301", "Huawei - 21010738716TK6901324", "Huawei - 21010738716TK6901325", "Solis - 118 DB22B09 047", "Solis - 1812051232060001"])
 
 days = datetime.timedelta(days=6)
 today = datetime.datetime.now()
