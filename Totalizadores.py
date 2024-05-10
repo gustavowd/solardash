@@ -58,6 +58,8 @@ if len(d) == 2:
     #print(chart_data)
     #st.plotly_chart(chart_data, height=550)
     fig = px.bar(chart_data, barmode='group')
+    fig.update_layout(xaxis_title=dict(text='Dia'),
+        yaxis_title=dict(text='Energia gerada em wh'))
 
     # Plot!
     st.plotly_chart(fig, use_container_width=True)
