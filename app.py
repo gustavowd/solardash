@@ -93,27 +93,27 @@ if len(d) == 2:
         measure_id = measurements[measurements['measurement_name']==measure].index.values.item(0)
 
         if device_type == 1:
-            df = conn.query("select * from measurements where measurement_time between '" + str(d[0]) + " 00:00:01' and '" + str(d[1]) + " 23:59:59' and device_id=" + str(device_id) + " and measurement_type_id=" + str(measure_id) + " order by measurement_time")
+            df = conn.query("select measurement_value, measurement_time from measurements where measurement_time between '" + str(d[0]) + " 00:00:01' and '" + str(d[1]) + " 23:59:59' and device_id=" + str(device_id) + " and measurement_type_id=" + str(measure_id) + " order by measurement_time")
         elif device_type == 2:
             if measure_id == 0:
                 measure_id = 27
-            df = conn.query("select * from measurements where measurement_time between '" + str(d[0]) + " 00:00:01' and '" + str(d[1]) + " 23:59:59' and device_id=" + str(device_id) + " and measurement_type_id=" + str(measure_id) + " order by measurement_time")
+            df = conn.query("select measurement_value, measurement_time from measurements where measurement_time between '" + str(d[0]) + " 00:00:01' and '" + str(d[1]) + " 23:59:59' and device_id=" + str(device_id) + " and measurement_type_id=" + str(measure_id) + " order by measurement_time")
         elif device_type == 3:
             if measure_id == 0:
                 measure_id = 42
-            df = conn.query("select * from measurements where measurement_time between '" + str(d[0]) + " 00:00:01' and '" + str(d[1]) + " 23:59:59' and device_id=" + str(device_id) + " and measurement_type_id=" + str(measure_id) + " order by measurement_time")
+            df = conn.query("select measurement_value, measurement_time from measurements where measurement_time between '" + str(d[0]) + " 00:00:01' and '" + str(d[1]) + " 23:59:59' and device_id=" + str(device_id) + " and measurement_type_id=" + str(measure_id) + " order by measurement_time")
         elif device_type == 4:
-            df = conn.query("select * from measurements where measurement_time between '" + str(d[0]) + " 00:00:01' and '" + str(d[1]) + " 23:59:59' and device_id=" + str(device_id) + " and measurement_type_id=" + str(measure_id) + " order by measurement_time")
+            df = conn.query("select measurement_value, measurement_time from measurements where measurement_time between '" + str(d[0]) + " 00:00:01' and '" + str(d[1]) + " 23:59:59' and device_id=" + str(device_id) + " and measurement_type_id=" + str(measure_id) + " order by measurement_time")
         if chart_data.empty:
             chart_data = pd.DataFrame(df, columns=['measurement_time', 'measurement_value'])
-            chart_data['measurement_time'] = pd.to_datetime(chart_data['measurement_time']) # para converter para datetime
-            chart_data['measurement_time'] -= pd.to_timedelta(3, unit='h') # pra reduzir 1 hora
+            #chart_data['measurement_time'] = pd.to_datetime(chart_data['measurement_time']) # para converter para datetime
+            #chart_data['measurement_time'] -= pd.to_timedelta(3, unit='h') # pra reduzir 1 hora
             chart_data = chart_data.set_index('measurement_time')
             chart_data = chart_data.rename(columns={"measurement_value": m})
         else:
             chart_data2 = pd.DataFrame(df, columns=['measurement_time', 'measurement_value'])
-            chart_data2['measurement_time'] = pd.to_datetime(chart_data2['measurement_time']) # para converter para datetime
-            chart_data2['measurement_time'] -= pd.to_timedelta(3, unit='h') # pra reduzir 1 hora
+            #chart_data2['measurement_time'] = pd.to_datetime(chart_data2['measurement_time']) # para converter para datetime
+            #chart_data2['measurement_time'] -= pd.to_timedelta(3, unit='h') # pra reduzir 1 hora
             chart_data2 = chart_data2.set_index('measurement_time')
             chart_data2 = chart_data2.rename(columns={"measurement_value": m})
 
