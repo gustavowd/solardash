@@ -72,16 +72,27 @@ with tab1:
             df = conn.query("select measurement_value, measurement_time from measurements where measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 05:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 19:59:59' and device_id=" + str(device_id) + " and measurement_type_id=1 order by measurement_time")
             if chart_data.empty:
                 chart_data = pd.DataFrame(df, columns=['measurement_time', 'measurement_value'])
+                chart_data['measurement_time'] = pd.to_datetime(chart_data['measurement_time']) # para converter para datetime
+                chart_data['measurement_time'] -= pd.to_timedelta(3, unit='h')
                 chart_data = chart_data.set_index('measurement_time')
             else:
                 chart_data2 = pd.DataFrame(df, columns=['measurement_time', 'measurement_value'])
+                chart_data2['measurement_time'] = pd.to_datetime(chart_data2['measurement_time']) # para converter para datetime
+                chart_data2['measurement_time'] -= pd.to_timedelta(3, unit='h')
                 chart_data2 = chart_data2.set_index('measurement_time')
                 chart_data = chart_data.add(chart_data2, fill_value=None)
 
         chart_data = chart_data.div(1000)
         chart_data = chart_data.rename(columns={"measurement_value": "Energia gerada em kw"})
-        #chart_data = chart_data.rename(columns={"measurement_time": "Horário"})
-        st.line_chart(chart_data, height=500, y="Energia gerada em kw")
+        #st.line_chart(chart_data, height=500, y="Energia gerada em kw")
+        fig = px.line(chart_data)
+        fig.update_layout(xaxis_title=dict(text='Horário'),
+            yaxis_title=dict(text='Energia gerada em kw'),
+            showlegend=False,
+            height=500)
+
+        # Plot!
+        st.plotly_chart(fig, use_container_width=True)
 
 
 
@@ -153,19 +164,26 @@ with tab2:
         df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + "and measurement_type_id=7 and measurement_time between '" + today.strftime("%Y") + "-" + str(month_index) + "-01 00:00:01' and '" + today.strftime("%Y") + "-" + str(month_index) + "-30 23:59:59' group by day order by day")
         if chart_data.empty:
             chart_data = pd.DataFrame(df, columns=['day', 'max'])
-            chart_data = chart_data.set_index('day')
+            chart_data = chart_data.rename(columns={"max": "Energia gerada em kwh"})
+            chart_data = chart_data.rename(columns={"day": "Dia do mês"})
+            chart_data = chart_data.set_index('Dia do mês')
         else:
             chart_data2 = pd.DataFrame(df, columns=['day', 'max'])
-            chart_data2 = chart_data2.set_index('day')
+            chart_data2 = chart_data2.rename(columns={"max": "Energia gerada em kwh"})
+            chart_data2 = chart_data2.rename(columns={"day": "Dia do mês"})
+            chart_data2 = chart_data2.set_index('Dia do mês')
             chart_data = chart_data.add(chart_data2, fill_value=0)
 
-        #fig = px.bar(chart_data, barmode='group')
-        #fig.update_layout(xaxis_title=dict(text='Dia'),
-        #    yaxis_title=dict(text='Energia gerada em wh'))
-
-        # Plot!
-        #st.plotly_chart(fig, use_container_width=True)
     chart_data = chart_data.div(1000)
-    chart_data = chart_data.rename(columns={"max": "Energia gerada em kwh"})
-    st.bar_chart(chart_data, y="Energia gerada em kwh")
+    #st.bar_chart(chart_data, height=500, y="Energia gerada em kwh")
+
+    fig = px.bar(chart_data)
+    fig.update_layout(xaxis_title=dict(text='Dia do mês'),
+        yaxis_title=dict(text='Energia gerada em kwh'),
+        showlegend=False,
+        xaxis_dtick = 1,
+        height=500)
+
+    # Plot!
+    st.plotly_chart(fig, use_container_width=True)
 
