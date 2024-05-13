@@ -76,7 +76,7 @@ with tab1:
             else:
                 chart_data2 = pd.DataFrame(df, columns=['measurement_time', 'measurement_value'])
                 chart_data2 = chart_data2.set_index('measurement_time')
-                chart_data = chart_data.add(chart_data2, fill_value=0)
+                chart_data = chart_data.add(chart_data2, fill_value=None)
 
         st.line_chart(chart_data, height=500)
 
@@ -154,7 +154,7 @@ with tab2:
         else:
             chart_data2 = pd.DataFrame(df, columns=['day', 'max'])
             chart_data2 = chart_data2.set_index('day')
-            chart_data = chart_data.add(chart_data2, fill_value=0)
+            chart_data = chart_data.add(chart_data2, fill_value=None)
 
         #fig = px.bar(chart_data, barmode='group')
         #fig.update_layout(xaxis_title=dict(text='Dia'),
