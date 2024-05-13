@@ -69,7 +69,7 @@ with tab1:
     if 'multi_day' in locals():
         for m in multi_day:
             device_id = devices[devices['device_name']==m].index.values.item(0)
-            df = conn.query("select measurement_value, measurement_time from measurements where measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 00:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 23:59:59' and device_id=" + str(device_id) + " and measurement_type_id=1 order by measurement_time")
+            df = conn.query("select measurement_value, measurement_time from measurements where measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 05:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 19:59:59' and device_id=" + str(device_id) + " and measurement_type_id=1 order by measurement_time")
             if chart_data.empty:
                 chart_data = pd.DataFrame(df, columns=['measurement_time', 'measurement_value'])
                 chart_data = chart_data.set_index('measurement_time')
