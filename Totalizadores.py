@@ -78,7 +78,10 @@ with tab1:
                 chart_data2 = chart_data2.set_index('measurement_time')
                 chart_data = chart_data.add(chart_data2, fill_value=None)
 
-        st.line_chart(chart_data, height=500)
+        chart_data = chart_data.div(1000)
+        chart_data = chart_data.rename(columns={"measurement_value": "Energia gerada em kw"})
+        #chart_data = chart_data.rename(columns={"measurement_time": "Horário"})
+        st.line_chart(chart_data, height=500, y="Energia gerada em kw")
 
 
 
@@ -162,5 +165,7 @@ with tab2:
 
         # Plot!
         #st.plotly_chart(fig, use_container_width=True)
-    st.bar_chart(chart_data)
+    chart_data = chart_data.div(1000)
+    chart_data = chart_data.rename(columns={"max": "Energia gerada em kwh"})
+    st.bar_chart(chart_data, y="Energia gerada em kwh")
 
