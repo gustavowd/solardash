@@ -154,7 +154,7 @@ with tab2:
         else:
             chart_data2 = pd.DataFrame(df, columns=['day', 'max'])
             chart_data2 = chart_data2.set_index('day')
-            chart_data = chart_data.add(chart_data2, fill_value=None)
+            chart_data = chart_data.add(chart_data2, fill_value=0)
 
         #fig = px.bar(chart_data, barmode='group')
         #fig.update_layout(xaxis_title=dict(text='Dia'),
