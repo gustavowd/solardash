@@ -69,7 +69,7 @@ with tab1:
     if 'multi_day' in locals():
         for m in multi_day:
             device_id = devices[devices['device_name']==m].index.values.item(0)
-            df = conn.query("select measurement_value, measurement_time from measurements where measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 05:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 19:59:59' and device_id=" + str(device_id) + " and measurement_type_id=1 order by measurement_time")
+            df = conn.query("select measurement_value, measurement_time from measurements where measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 05:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 19:59:59' and device_id=" + str(device_id) + " and measurement_type_id=1 order by measurement_time", ttl=0)
             if chart_data.empty:
                 chart_data = pd.DataFrame(df, columns=['measurement_time', 'measurement_value'])
                 chart_data['measurement_time'] = pd.to_datetime(chart_data['measurement_time']) # para converter para datetime
@@ -161,17 +161,33 @@ with tab2:
     for m in multi_month:
         device_id = devices[devices['device_name']==m].index.values.item(0)
         #df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=7 and measurement_time between '" + today.strftime("%Y") + "-" + str(month_index) + "-01 00:00:01' and '" + today.strftime("%Y") + "-" + str(month_index) + "-30 23:59:59' group by day order by day")
-        df = conn.query("select day, sum(pico) as pico_mes from picosdiariosinversores natural join devices where device_id=" + str(device_id) + " and year=" + today.strftime("%Y") + " and month=" + str(month_index) + " group by day order by day")
+        df = conn.query("select day, sum(pico) as pico_mes from picosdiariosinversores natural join devices where device_id=" + str(device_id) + " and year=" + today.strftime("%Y") + " and month=" + str(month_index) + " group by day order by day", ttl=0)
         if chart_data.empty:
             chart_data = pd.DataFrame(df, columns=['day', 'pico_mes'])
             chart_data = chart_data.rename(columns={"pico_mes": "Energia gerada em kwh"})
             chart_data = chart_data.rename(columns={"day": "Dia do mês"})
             chart_data = chart_data.set_index('Dia do mês')
+            print(chart_data)
+
+            df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=7 and measurement_time between '2024-05-13 00:00:01' and '2024-05-13 23:59:59' group by day order by day", ttl=0)
+            chart_data3 = pd.DataFrame(df, columns=['day', 'max'])
+            chart_data3 = chart_data3.rename(columns={"max": "Energia gerada em kwh"})
+            chart_data3 = chart_data3.rename(columns={"day": "Dia do mês"})
+            chart_data3 = chart_data3.set_index('Dia do mês')
+            print(chart_data3)
+            chart_data = pd.concat([chart_data, chart_data3], ignore_index=True)
         else:
             chart_data2 = pd.DataFrame(df, columns=['day', 'pico_mes'])
             chart_data2 = chart_data2.rename(columns={"pico_mes": "Energia gerada em kwh"})
             chart_data2 = chart_data2.rename(columns={"day": "Dia do mês"})
             chart_data2 = chart_data2.set_index('Dia do mês')
+
+            df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=7 and measurement_time between '2024-05-13 00:00:01' and '2024-05-13 23:59:59' group by day order by day", ttl=0)
+            chart_data3 = pd.DataFrame(df, columns=['day', 'max'])
+            chart_data3 = chart_data3.rename(columns={"max": "Energia gerada em kwh"})
+            chart_data3 = chart_data3.rename(columns={"day": "Dia do mês"})
+            chart_data3 = chart_data3.set_index('Dia do mês')
+            chart_data2 = pd.concat([chart_data2, chart_data3], ignore_index=True)
             chart_data = chart_data.add(chart_data2, fill_value=0)
 
     chart_data = chart_data.div(1000)
@@ -253,7 +269,7 @@ with tab3:
     for m in multi_year:
         device_id = devices[devices['device_name']==m].index.values.item(0)
         #df = conn.query("select day, sum(pico) as pico_mes from picosdiariosinversores natural join devices where device_id=" + str(device_id) + " and year=" + today.strftime("%Y") + " and month=" + str(month_index) + " group by day order by day")
-        df = conn.query("select device_name, month, sum(pico) as picos from picosdiariosinversores natural join devices where device_id=" + str(device_id) + " and year=" + str(year_index) + " group by (device_name, month) order by month")
+        df = conn.query("select device_name, month, sum(pico) as picos from picosdiariosinversores natural join devices where device_id=" + str(device_id) + " and year=" + str(year_index) + " group by (device_name, month) order by month", ttl=0)
         if chart_data.empty:
             chart_data = pd.DataFrame(df, columns=['month', 'picos'])
             chart_data = chart_data.rename(columns={"picos": "Energia gerada em kwh"})

@@ -59,7 +59,7 @@ if len(d) == 2:
 
         measure_id = measurements[measurements['measurement_name']==measure].index.values.item(0)
 
-        df = conn.query("select measurement_value, measurement_time from measurements where measurement_time between '" + str(d[0]) + " 00:00:01' and '" + str(d[1]) + " 23:59:59' and device_id=" + str(device_id) + " and measurement_type_id=" + str(measure_id) + " order by measurement_time")
+        df = conn.query("select measurement_value, measurement_time from measurements where measurement_time between '" + str(d[0]) + " 00:00:01' and '" + str(d[1]) + " 23:59:59' and device_id=" + str(device_id) + " and measurement_type_id=" + str(measure_id) + " order by measurement_time", ttl=0)
         if chart_data.empty:
             chart_data = pd.DataFrame(df, columns=['measurement_time', 'measurement_value'])
             if measure_id==3:
