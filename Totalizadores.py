@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import datetime
 import plotly.express as px
+import calendar
 
 st.set_page_config(
     page_title="Sistema de monitoramento energético do Campus Pato Branco da UTFPR",
@@ -203,6 +204,7 @@ with tab2:
                 chart_data = chart_data.add(chart_data2, fill_value=0)
 
     chart_data = chart_data.div(1000)
+    number_of_days = calendar.monthrange(today.year, month_index)[1]
     #st.bar_chart(chart_data, height=500, y="Energia gerada em kwh")
 
     fig = px.bar(chart_data)
@@ -210,7 +212,7 @@ with tab2:
         yaxis_title=dict(text='Energia gerada em kwh'),
         showlegend=False,
         xaxis_dtick = 1,
-        xaxis_range=[1,31],
+        xaxis_range=[1,number_of_days],
         height=500)
 
     # Plot!
