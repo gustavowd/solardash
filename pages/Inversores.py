@@ -76,3 +76,5 @@ if len(d) == 2:
             chart_data = chart_data.merge(chart_data2, left_index=True, right_index=True, how='outer')
 
     st.line_chart(chart_data, height=550)
+    conn.reset()
+    
