@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import datetime
+import plotly.express as px
 
 
 def print_full(x):
@@ -64,20 +65,31 @@ if len(d) == 2:
             chart_data = pd.DataFrame(df, columns=['measurement_time', 'measurement_value'])
             if measure_id==3:
                 chart_data.loc[chart_data['measurement_value'] >= 1.0, 'measurement_value'] = 1.0
-            #chart_data['measurement_time'] = pd.to_datetime(chart_data['measurement_time']) # para converter para datetime
-            #chart_data['measurement_time'] -= pd.to_timedelta(3, unit='h') # pra reduzir 1 hora
+            chart_data['measurement_time'] = pd.to_datetime(chart_data['measurement_time']) # para converter para datetime
+            chart_data['measurement_time'] -= pd.to_timedelta(3, unit='h') # pra reduzir 1 hora
             chart_data = chart_data.set_index('measurement_time')
             chart_data = chart_data.rename(columns={"measurement_value": m})
         else:
             chart_data2 = pd.DataFrame(df, columns=['measurement_time', 'measurement_value'])
             if measure_id==3:
                 chart_data2.loc[chart_data2['measurement_value'] >= 1.0, 'measurement_value'] = 1.0
-            #chart_data2['measurement_time'] = pd.to_datetime(chart_data2['measurement_time']) # para converter para datetime
-            #chart_data2['measurement_time'] -= pd.to_timedelta(3, unit='h') # pra reduzir 1 hora
+            chart_data2['measurement_time'] = pd.to_datetime(chart_data2['measurement_time']) # para converter para datetime
+            chart_data2['measurement_time'] -= pd.to_timedelta(3, unit='h') # pra reduzir 1 hora
             chart_data2 = chart_data2.set_index('measurement_time')
             chart_data2 = chart_data2.rename(columns={"measurement_value": m})
 
             chart_data = chart_data.merge(chart_data2, left_index=True, right_index=True, how='outer')
 
-    st.line_chart(chart_data, height=550)
+    #st.line_chart(chart_data, height=550)
+    fig = px.line(chart_data)
+    fig.update_layout(height=550,
+                      legend=dict(
+                        orientation="h",
+                        title="Medidor Geral"),
+                        xaxis_title=None,
+                        yaxis_title=None
+    )
+
+    # Plot!
+    st.plotly_chart(fig, use_container_width=True)
     conn.reset()
