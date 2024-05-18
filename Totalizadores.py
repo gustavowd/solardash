@@ -70,21 +70,24 @@ with tab1:
     if 'multi_day' in locals():
         for m in multi_day:
             device_id = devices[devices['device_name']==m].index.values.item(0)
-            df = conn.query("select measurement_value, measurement_time from measurements where measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 05:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 19:59:59' and device_id=" + str(device_id) + " and measurement_type_id=1 order by measurement_time", ttl=0)
+            #df = conn.query("select measurement_value, measurement_time from measurements where measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 05:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 19:59:59' and device_id=" + str(device_id) + " and measurement_type_id=1 order by measurement_time", ttl=0)
+            df = conn.query("select make_timestamp(" + today.strftime("%Y") + "," + today.strftime("%m") + "," + today.strftime("%d") +", extract(hour from measurement_time)::int, extract(minute from measurement_time)::int, 0), AVG(measurement_value) from measurements where measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 05:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 19:59:59' and device_id=" + str(device_id) + " and measurement_type_id=1 group by extract(hour from measurement_time), extract(minute from measurement_time) order by extract(hour from measurement_time), extract(minute from measurement_time)", ttl=0)
             if chart_data.empty:
-                chart_data = pd.DataFrame(df, columns=['measurement_time', 'measurement_value'])
-                chart_data['measurement_time'] = pd.to_datetime(chart_data['measurement_time']) # para converter para datetime
-                chart_data['measurement_time'] -= pd.to_timedelta(3, unit='h')
-                chart_data = chart_data.set_index('measurement_time')
+                chart_data = pd.DataFrame(df, columns=['make_timestamp', 'avg'])
+                chart_data['make_timestamp'] = pd.to_datetime(chart_data['make_timestamp']) # para converter para datetime
+                #chart_data['make_timestamp'] -= pd.to_timedelta(3, unit='h')
+                chart_data = chart_data.rename(columns={"make_timestamp": "Horário"})
+                chart_data = chart_data.set_index('Horário')
             else:
-                chart_data2 = pd.DataFrame(df, columns=['measurement_time', 'measurement_value'])
-                chart_data2['measurement_time'] = pd.to_datetime(chart_data2['measurement_time']) # para converter para datetime
-                chart_data2['measurement_time'] -= pd.to_timedelta(3, unit='h')
-                chart_data2 = chart_data2.set_index('measurement_time')
+                chart_data2 = pd.DataFrame(df, columns=['make_timestamp', 'avg'])
+                chart_data2['make_timestamp'] = pd.to_datetime(chart_data2['make_timestamp']) # para converter para datetime
+                #chart_data2['make_timestamp'] -= pd.to_timedelta(3, unit='h')
+                chart_data2 = chart_data2.rename(columns={"make_timestamp": "Horário"})
+                chart_data2 = chart_data2.set_index('Horário')
                 chart_data = chart_data.add(chart_data2, fill_value=None)
 
         chart_data = chart_data.div(1000)
-        chart_data = chart_data.rename(columns={"measurement_value": "Energia gerada em kw"})
+        chart_data = chart_data.rename(columns={"avg": "Energia gerada em kw"})
         #st.line_chart(chart_data, height=500, y="Energia gerada em kw")
         fig = px.area(chart_data)
         fig.update_layout(xaxis_title=dict(text='Horário'),
