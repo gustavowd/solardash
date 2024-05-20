@@ -178,12 +178,13 @@ with tab2:
                 chart_data = chart_data.rename(columns={"day": "Dia do mês"})
                 chart_data = chart_data.set_index('Dia do mês')
 
-                df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=7 and measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 05:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 19:59:59' group by day order by day", ttl=0)
-                chart_data3 = pd.DataFrame(df, columns=['day', 'max'])
-                chart_data3 = chart_data3.rename(columns={"max": "Energia gerada em kwh"})
-                chart_data3 = chart_data3.rename(columns={"day": "Dia do mês"})
-                chart_data3 = chart_data3.set_index('Dia do mês')
-                chart_data = pd.concat([chart_data, chart_data3])
+                if today.hour < 21:
+                    df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=7 and measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 05:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 19:59:59' group by day order by day", ttl=0)
+                    chart_data3 = pd.DataFrame(df, columns=['day', 'max'])
+                    chart_data3 = chart_data3.rename(columns={"max": "Energia gerada em kwh"})
+                    chart_data3 = chart_data3.rename(columns={"day": "Dia do mês"})
+                    chart_data3 = chart_data3.set_index('Dia do mês')
+                    chart_data = pd.concat([chart_data, chart_data3])
         else:
             chart_data2 = pd.DataFrame(df, columns=['day', 'pico_mes'])
             if today.day == 1:
@@ -198,12 +199,13 @@ with tab2:
                 chart_data2 = chart_data2.rename(columns={"day": "Dia do mês"})
                 chart_data2 = chart_data2.set_index('Dia do mês')
 
-                df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=7 and measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 05:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 19:59:59' group by day order by day", ttl=0)
-                chart_data4 = pd.DataFrame(df, columns=['day', 'max'])
-                chart_data4 = chart_data4.rename(columns={"max": "Energia gerada em kwh"})
-                chart_data4 = chart_data4.rename(columns={"day": "Dia do mês"})
-                chart_data4 = chart_data4.set_index('Dia do mês')
-                chart_data2 = pd.concat([chart_data2, chart_data4])
+                if today.hour < 21:
+                    df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=7 and measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 05:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 19:59:59' group by day order by day", ttl=0)
+                    chart_data4 = pd.DataFrame(df, columns=['day', 'max'])
+                    chart_data4 = chart_data4.rename(columns={"max": "Energia gerada em kwh"})
+                    chart_data4 = chart_data4.rename(columns={"day": "Dia do mês"})
+                    chart_data4 = chart_data4.set_index('Dia do mês')
+                    chart_data2 = pd.concat([chart_data2, chart_data4])
                 chart_data = chart_data.add(chart_data2, fill_value=0)
 
     chart_data = chart_data.div(1000)
