@@ -22,7 +22,7 @@ with tab1:
     with col1:
         option = st.selectbox(
             "Selecione a unidade consumidora",
-            (" ", "UTFPR-76942716", "Politec-73134759", "Area Ex.-88481328", "Total"),
+            ("UTFPR-76942716", "Politec-73134759", "Area Ex.-88481328", "Total"),
             key="day_combo")
 
     df = conn.query("select * from devices where device_type=1 order by device_name")
