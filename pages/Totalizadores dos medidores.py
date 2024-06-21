@@ -137,7 +137,7 @@ with tab2:
     conn = st.connection("my_database")
     with col1:
         option = st.selectbox(
-            "Selecione a unidade consumidora",
+            "Selecione o transformador",
             ("TRAFO 1", "TRAFO 2", "TRAFO 3", "TRAFO 4", "Total"),
             key="month_combo")
         
@@ -338,7 +338,7 @@ with tab3:
     conn = st.connection("my_database")
     with col1:
         option = st.selectbox(
-            "Selecione a unidade consumidora",
+            "Selecione o transformador",
             ("TRAFO 1", "TRAFO 2", "TRAFO 3", "TRAFO 4", "Total"),
             key="year_combo")
         
