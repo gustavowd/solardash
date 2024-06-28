@@ -85,13 +85,13 @@ with tab1:
                 df = conn.query("select make_timestamp(" + today.strftime("%Y") + "," + today.strftime("%m") + "," + today.strftime("%d") +", extract(hour from measurement_time)::int, extract(minute from measurement_time)::int, 0), AVG(measurement_value) from measurements where measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 00:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 23:59:59' and device_id=" + str(device_id) + " and measurement_type_id=27 group by extract(hour from measurement_time), extract(minute from measurement_time) order by extract(hour from measurement_time), extract(minute from measurement_time)", ttl=0)
                 if chart_data.empty:
                     chart_data = pd.DataFrame(df, columns=['make_timestamp', 'avg'])
-                    chart_data['make_timestamp'] = pd.to_datetime(chart_data['make_timestamp']) # para converter para datetime
+                    #chart_data['make_timestamp'] = pd.to_datetime(chart_data['make_timestamp']) # para converter para datetime
                     #chart_data['make_timestamp'] -= pd.to_timedelta(3, unit='h')
                     chart_data = chart_data.rename(columns={"make_timestamp": "Horário"})
                     chart_data = chart_data.set_index('Horário')
                 else:
                     chart_data2 = pd.DataFrame(df, columns=['make_timestamp', 'avg'])
-                    chart_data2['make_timestamp'] = pd.to_datetime(chart_data2['make_timestamp']) # para converter para datetime
+                    #chart_data2['make_timestamp'] = pd.to_datetime(chart_data2['make_timestamp']) # para converter para datetime
                     #chart_data2['make_timestamp'] -= pd.to_timedelta(3, unit='h')
                     chart_data2 = chart_data2.rename(columns={"make_timestamp": "Horário"})
                     chart_data2 = chart_data2.set_index('Horário')

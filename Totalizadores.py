@@ -3,6 +3,7 @@ import pandas as pd
 import datetime
 import plotly.express as px
 import calendar
+from sqlalchemy import text
 
 st.set_page_config(
     page_title="Sistema de monitoramento energético do Campus Pato Branco da UTFPR",
@@ -19,6 +20,8 @@ with tab1:
 
 
     conn = st.connection("my_database")
+    with conn.session as s:
+        s.execute(text("SET TIME ZONE 'localtime'"))
     with col1:
         option = st.selectbox(
             "Selecione a unidade consumidora",
@@ -74,13 +77,13 @@ with tab1:
             df = conn.query("select make_timestamp(" + today.strftime("%Y") + "," + today.strftime("%m") + "," + today.strftime("%d") +", extract(hour from measurement_time)::int, extract(minute from measurement_time)::int, 0), AVG(measurement_value) from measurements where measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 05:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 19:59:59' and device_id=" + str(device_id) + " and measurement_type_id=1 group by extract(hour from measurement_time), extract(minute from measurement_time) order by extract(hour from measurement_time), extract(minute from measurement_time)", ttl=0)
             if chart_data.empty:
                 chart_data = pd.DataFrame(df, columns=['make_timestamp', 'avg'])
-                chart_data['make_timestamp'] = pd.to_datetime(chart_data['make_timestamp']) # para converter para datetime
+                #chart_data['make_timestamp'] = pd.to_datetime(chart_data['make_timestamp']) # para converter para datetime
                 #chart_data['make_timestamp'] -= pd.to_timedelta(3, unit='h')
                 chart_data = chart_data.rename(columns={"make_timestamp": "Horário"})
                 chart_data = chart_data.set_index('Horário')
             else:
                 chart_data2 = pd.DataFrame(df, columns=['make_timestamp', 'avg'])
-                chart_data2['make_timestamp'] = pd.to_datetime(chart_data2['make_timestamp']) # para converter para datetime
+                #chart_data2['make_timestamp'] = pd.to_datetime(chart_data2['make_timestamp']) # para converter para datetime
                 #chart_data2['make_timestamp'] -= pd.to_timedelta(3, unit='h')
                 chart_data2 = chart_data2.rename(columns={"make_timestamp": "Horário"})
                 chart_data2 = chart_data2.set_index('Horário')
