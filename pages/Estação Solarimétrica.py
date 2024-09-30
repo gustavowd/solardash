@@ -36,7 +36,8 @@ measurements = measurements.set_index('measurement_type_id')
 with col1:
     multi = st.multiselect(
         'Selecione um ou mais dispositivos:',
-        df['device_name'])
+        df['device_name'],
+        default=["Station_Bib"])
 
 with col2:
     measure = st.selectbox(
