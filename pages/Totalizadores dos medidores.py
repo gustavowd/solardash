@@ -131,7 +131,7 @@ with tab2:
     st.header('Total de consumo no mês')
     c = st.container()
     with c:
-        col1, col2, col3 = st.columns([0.17, 0.1, 0.63])
+        col1, col2, col3, col4 = st.columns([0.14, 0.12, 0.1, 0.64])
 
 
     conn = st.connection("my_database")
@@ -151,6 +151,16 @@ with tab2:
             options,
             key="month_combo2",
             index=month-1)
+        
+    year = int(today.strftime("%Y"))
+    options_year = ["2024", "2025"]
+    #print(year)
+    with col3:
+        option_year = st.selectbox(
+            "Selecione o ano",
+            options_year,
+            key="month_combo3",
+            index=year-2024)
 
     df = conn.query("select * from devices where device_type=2 order by device_name")
     devices = pd.DataFrame(df, columns=['device_name', 'device_id', 'device_type'])
@@ -159,35 +169,35 @@ with tab2:
     total = 0
     match option:
         case "TRAFO 1":
-            with col3:
+            with col4:
                 multi_month = st.multiselect(
                     'Selecione um ou mais dispositivos:',
                     df['device_name'],
                     key="month",
                     default=["Meter_TR1_BLOCO_B", "Meter_TR1_BLOCO_C", "Meter_TR1_BLOCO_D", "Meter_TR1_BLOCO_F", "Meter_TR1_BLOCO_H", "Meter_TR1_BLOCO_I", "Meter_TR1_BLOCO_J", "Meter_TR1_BLOCO_L", "Meter_TR1_BLOCO_M", "Meter_TR1_BLOCO_N"])
         case "TRAFO 2":
-            with col3:
+            with col4:
                 multi_month = st.multiselect(
                     'Selecione um ou mais dispositivos:',
                     df['device_name'],
                     key="month",
                     default=["Meter_TR2_BLOCO_J1", "Meter_TR2_BLOCO_M", "Meter_TR2_BLOCO_N"])
         case "TRAFO 3":
-            with col3:
+            with col4:
                 multi_month = st.multiselect(
                     'Selecione um ou mais dispositivos:',
                     df['device_name'],
                     key="month",
                     default=["Meter_TR3_BLOCO_V", "Meter_TR3_BLOCO_V_AC", "Meter_TR3_BLOCO_W"])
         case "TRAFO 4":
-            with col3:
+            with col4:
                 multi_month = st.multiselect(
                     'Selecione um ou mais dispositivos:',
                     df['device_name'],
                     key="month",
                     default=["Meter_TR4_BLOCO_KY", "Meter_TR4_BLOCO_O", "Meter_TR4_BLOCO_P", "Meter_TR4_BLOCO_Q", "Meter_TR4_BLOCO_R", "Meter_TR4_BLOCO_RU", "Meter_TR4_BLOCO_S", "Meter_TR4_BLOCO_T", "Meter_TR4_BLOCO_U", "Meter_TR4_BLOCO_Z", "Meter_TR4_ILUM_EXTER"])
         case "Total":
-            with col3:
+            with col4:
                 total = 1
                 multi_month = st.multiselect(
                     'Selecione um ou mais dispositivos:',
@@ -198,13 +208,14 @@ with tab2:
     chart_data = pd.DataFrame()
     #print(option_month)
     month_index = options.index(option_month) + 1
+    #print(option_year)
     #print(month_index)
     if today.day == 1 and month_index == today.month:
         if total == 1:
             devices = devices.reset_index()  # make sure indexes pair with number of rows
             for index, device in devices.iterrows():
                 device_id = device['device_id']
-                df = conn.query("select day, sum(pico) as pico_mes from picosdiariosmedidores where year=" + today.strftime("%Y") + " and month=" + str(month_index) + " group by day order by day", ttl=0)
+                df = conn.query("select day, sum(pico) as pico_mes from picosdiariosmedidores where year=" + option_year + " and month=" + str(month_index) + " group by day order by day", ttl=0)
                 if chart_data.empty:
                     chart_data = pd.DataFrame(df, columns=['day', 'pico_mes'])
                     chart_data = chart_data.rename(columns={"pico_mes": "Energia consumida em kwh"})
@@ -212,7 +223,7 @@ with tab2:
                     chart_data = chart_data.set_index('Dia do mês')
 
                     if month_index == today.month:
-                        df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=27 and measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 00:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 23:59:59' group by day order by day", ttl=0)
+                        df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=27 and measurement_time between '" + option_year + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 00:00:01' and '" + option_year + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 23:59:59' group by day order by day", ttl=0)
                         chart_data3 = pd.DataFrame(df, columns=['day', 'max'])
                         chart_data3 = chart_data3.rename(columns={"max": "Energia consumida em kwh"})
                         chart_data3 = chart_data3.rename(columns={"day": "Dia do mês"})
@@ -226,7 +237,7 @@ with tab2:
         else:
             for m in multi_month:
                 device_id = devices[devices['device_name']==m].index.values.item(0)
-                df = conn.query("select day, sum(pico) as pico_mes from picosdiariosmedidores natural join devices where device_id=" + str(device_id) + " and year=" + today.strftime("%Y") + " and month=" + str(month_index) + " group by day order by day", ttl=0)
+                df = conn.query("select day, sum(pico) as pico_mes from picosdiariosmedidores natural join devices where device_id=" + str(device_id) + " and year=" + option_year + " and month=" + str(month_index) + " group by day order by day", ttl=0)
                 if chart_data.empty:
                     chart_data = pd.DataFrame(df, columns=['day', 'pico_mes'])
                     chart_data = chart_data.rename(columns={"pico_mes": "Energia consumida em kwh"})
@@ -234,7 +245,7 @@ with tab2:
                     chart_data = chart_data.set_index('Dia do mês')
 
                     if month_index == today.month:
-                        df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=27 and measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 00:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 23:59:59' group by day order by day", ttl=0)
+                        df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=27 and measurement_time between '" + option_year + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 00:00:01' and '" + option_year + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 23:59:59' group by day order by day", ttl=0)
                         chart_data3 = pd.DataFrame(df, columns=['day', 'max'])
                         chart_data3 = chart_data3.rename(columns={"max": "Energia consumida em kwh"})
                         chart_data3 = chart_data3.rename(columns={"day": "Dia do mês"})
@@ -247,7 +258,7 @@ with tab2:
                     chart_data2 = chart_data2.set_index('Dia do mês')
 
                     if month_index == today.month:
-                        df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=27 and measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 00:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 23:59:59' group by day order by day", ttl=0)
+                        df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=27 and measurement_time between '" + option_year + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 00:00:01' and '" + option_year + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 23:59:59' group by day order by day", ttl=0)
                         chart_data4 = pd.DataFrame(df, columns=['day', 'max'])
                         chart_data4 = chart_data4.rename(columns={"max": "Energia consumida em kwh"})
                         chart_data4 = chart_data4.rename(columns={"day": "Dia do mês"})
@@ -259,7 +270,7 @@ with tab2:
             #devices = devices.reset_index()  # make sure indexes pair with number of rows
             #for index, device in devices.iterrows():
             #    device_id = device['device_id']
-            df = conn.query("select day, sum(pico) as pico_mes from picosdiariosmedidores where year=" + today.strftime("%Y") + " and month=" + str(month_index) + " group by day order by day", ttl=0)
+            df = conn.query("select day, sum(pico) as pico_mes from picosdiariosmedidores where year=" + option_year + " and month=" + str(month_index) + " group by day order by day", ttl=0)
             chart_data = pd.DataFrame(df, columns=['day', 'pico_mes'])
             chart_data = chart_data.rename(columns={"pico_mes": "Energia consumida em kwh"})
             chart_data = chart_data.rename(columns={"day": "Dia do mês"})
@@ -267,11 +278,11 @@ with tab2:
         else:
             for m in multi_month:
                 device_id = devices[devices['device_name']==m].index.values.item(0)
-                df = conn.query("select day, sum(pico) as pico_mes from picosdiariosmedidores natural join devices where device_id=" + str(device_id) + " and year=" + today.strftime("%Y") + " and month=" + str(month_index) + " group by day order by day", ttl=0)
+                df = conn.query("select day, sum(pico) as pico_mes from picosdiariosmedidores natural join devices where device_id=" + str(device_id) + " and year=" + option_year + " and month=" + str(month_index) + " group by day order by day", ttl=0)
                 if chart_data.empty:
                     chart_data = pd.DataFrame(df, columns=['day', 'pico_mes'])
                     if today.day == 1 and month_index == today.month:
-                        df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=27 and measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 00:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 23:59:59' group by day order by day", ttl=0)
+                        df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=27 and measurement_time between '" + option_year + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 00:00:01' and '" + option_year + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 23:59:59' group by day order by day", ttl=0)
                         chart_data = pd.DataFrame(df, columns=['day', 'max'])
                         chart_data = chart_data.rename(columns={"max": "Energia consumida em kwh"})
                         chart_data = chart_data.rename(columns={"day": "Dia do mês"})
@@ -282,7 +293,7 @@ with tab2:
                         chart_data = chart_data.set_index('Dia do mês')
 
                         if month_index == today.month:
-                            df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=27 and measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 00:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 23:59:59' group by day order by day", ttl=0)
+                            df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=27 and measurement_time between '" + option_year + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 00:00:01' and '" + option_year + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 23:59:59' group by day order by day", ttl=0)
                             chart_data3 = pd.DataFrame(df, columns=['day', 'max'])
                             chart_data3 = chart_data3.rename(columns={"max": "Energia consumida em kwh"})
                             chart_data3 = chart_data3.rename(columns={"day": "Dia do mês"})
@@ -291,7 +302,7 @@ with tab2:
                 else:
                     chart_data2 = pd.DataFrame(df, columns=['day', 'pico_mes'])
                     if today.day == 1 and month_index == today.month:
-                        df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=27 and measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 00:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 23:59:59' group by day order by day", ttl=0)
+                        df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=27 and measurement_time between '" + option_year + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 00:00:01' and '" + option_year + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 23:59:59' group by day order by day", ttl=0)
                         chart_data2 = pd.DataFrame(df, columns=['day', 'max'])
                         chart_data2 = chart_data2.rename(columns={"max": "Energia consumida em kwh"})
                         chart_data2 = chart_data2.rename(columns={"day": "Dia do mês"})
@@ -303,7 +314,7 @@ with tab2:
                         chart_data2 = chart_data2.set_index('Dia do mês')
 
                         if month_index == today.month:
-                            df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=27 and measurement_time between '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 00:00:01' and '" + today.strftime("%Y") + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 23:59:59' group by day order by day", ttl=0)
+                            df = conn.query("select day,max(measurement_value) from measurements natural join time where device_id=" + str(device_id) + " and measurement_type_id=27 and measurement_time between '" + option_year + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 00:00:01' and '" + option_year + "-" + today.strftime("%m") + "-" + today.strftime("%d") + " 23:59:59' group by day order by day", ttl=0)
                             chart_data4 = pd.DataFrame(df, columns=['day', 'max'])
                             chart_data4 = chart_data4.rename(columns={"max": "Energia consumida em kwh"})
                             chart_data4 = chart_data4.rename(columns={"day": "Dia do mês"})
@@ -344,7 +355,7 @@ with tab3:
         
     today = datetime.datetime.now()
     year = int(today.strftime("%Y"))
-    options = ["2024"]
+    options = ["2024", "2025"]
     with col2:
         option_year = st.selectbox(
             "Selecione o ano",
