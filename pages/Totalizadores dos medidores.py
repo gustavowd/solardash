@@ -3,16 +3,23 @@ import pandas as pd
 import datetime
 import plotly.express as px
 import calendar
+import extra_streamlit_components as stx
 
 st.set_page_config(
     page_title="Sistema de monitoramento energético do Campus Pato Branco da UTFPR",
     layout="wide"
 )
 
-tab1, tab2, tab3 = st.tabs(["📈 Dia", "Mês", "Ano"])
+#tab1, tab2, tab3 = st.tabs(["📈 Dia", "Mês", "Ano"])
 
-with tab1:
-    st.header('Total de consumo no dia')
+chosen_id = stx.tab_bar(data=[stx.TabBarItemData(id="tab1", title="📈 Dia", description="Total de consumo no dia"),
+                            stx.TabBarItemData(id="tab2", title="Mês", description="Total de consumo no mês"),
+                            stx.TabBarItemData(id="tab3", title="Ano", description="Total de consumo no ano")],
+                            default="tab1")
+
+#with tab1:
+if chosen_id == "tab1":
+    #st.header('Total de consumo no dia')
     c = st.container()
     with c:
         col1, col2 = st.columns([0.2,0.8])
@@ -129,8 +136,9 @@ with tab1:
         st.plotly_chart(fig, use_container_width=True)
         conn.reset()
 
-with tab2:
-    st.header('Total de consumo no mês')
+#with tab2:
+elif chosen_id == "tab2":
+    #st.header('Total de consumo no mês')
     c = st.container()
     with c:
         col1, col2, col3, col4 = st.columns([0.14, 0.12, 0.1, 0.64])
@@ -352,8 +360,9 @@ with tab2:
     conn.reset()
 
 
-with tab3:
-    st.header('Total de consumo no ano')
+#with tab3:
+elif chosen_id == "tab3":
+    #st.header('Total de consumo no ano')
     c = st.container()
     with c:
         col1, col2, col3 = st.columns([0.17, 0.1, 0.63])

@@ -5,15 +5,22 @@ import plotly.express as px
 import calendar
 from sqlalchemy import text
 
+import extra_streamlit_components as stx
+
 st.set_page_config(
     page_title="Sistema de monitoramento energético do Campus Pato Branco da UTFPR",
     layout="wide"
 )
 
-tab1, tab2, tab3 = st.tabs(["📈 Dia", "Mês", "Ano"])
+#tab1, tab2, tab3 = st.tabs(["📈 Dia", "Mês", "Ano"])
 
-with tab1:
-    st.header('Total de geração no dia')
+chosen_id = stx.tab_bar(data=[stx.TabBarItemData(id="tab1", title="📈 Dia", description="Total de geração no dia"),
+                            stx.TabBarItemData(id="tab2", title="Mês", description="Total de geração no mês"),
+                            stx.TabBarItemData(id="tab3", title="Ano", description="Total de geração no ano")],
+                            default="tab1")
+
+if chosen_id == "tab1":
+    #st.header('Total de geração no dia')
     c = st.container()
     with c:
         col1, col2 = st.columns([0.2,0.8])
@@ -103,8 +110,8 @@ with tab1:
         st.plotly_chart(fig, use_container_width=True)
         conn.reset()
 
-with tab2:
-    st.header('Total de geração no mês')
+elif chosen_id == "tab2":
+    #st.header('Total de geração no mês')
     c = st.container()
     with c:
         col1, col2, col3, col4 = st.columns([0.15, 0.12, 0.1, 0.63])
@@ -239,8 +246,8 @@ with tab2:
     conn.reset()
 
 
-with tab3:
-    st.header('Total de geração no ano')
+elif chosen_id == "tab3":
+    #st.header('Total de geração no ano')
     c = st.container()
     with c:
         col1, col2, col3 = st.columns([0.17, 0.1, 0.63])
