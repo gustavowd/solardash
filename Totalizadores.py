@@ -12,6 +12,7 @@ st.set_page_config(
     layout="wide"
 )
 
+st.header('Dashboard de gestão energética da UTFPR / Campus Pato Branco')
 #tab1, tab2, tab3 = st.tabs(["📈 Dia", "Mês", "Ano"])
 
 chosen_id = stx.tab_bar(data=[stx.TabBarItemData(id="tab1", title="📈 Dia", description="Total de geração no dia"),
