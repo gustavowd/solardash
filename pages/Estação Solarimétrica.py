@@ -79,12 +79,6 @@ if len(d) == 2:
     df['measurement_time'] = pd.to_datetime(df['measurement_time'])
     df['measurement_time'] = df['measurement_time'] - pd.Timedelta(hours=3)
     csv = df.to_csv(index=False).encode('utf-8')
-    st.download_button(
-            label="Download de dados em CSV",
-            data=csv,
-            file_name="solar_data.csv",
-            mime="text/csv",
-        )
 
     #st.line_chart(chart_data, height=550)
     fig = px.line(chart_data)
@@ -98,4 +92,11 @@ if len(d) == 2:
 
     # Plot!
     st.plotly_chart(fig, use_container_width=True)
+
+    st.download_button(
+        label="Download de dados em CSV",
+        data=csv,
+        file_name="solar_data.csv",
+        mime="text/csv",
+    )
     conn.reset()

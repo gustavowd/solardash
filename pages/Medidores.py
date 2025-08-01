@@ -90,5 +90,13 @@ if len(d) == 2:
 
     # Plot!
     st.plotly_chart(fig, use_container_width=True)
+    
+    csv = chart_data.to_csv(index=True, sep=";", decimal=",").encode('utf-8')
+    st.download_button(
+        label="Download de dados em CSV",
+        data=csv,
+        file_name="solar_data.csv",
+        mime="text/csv",
+    )
 
     conn.reset()
