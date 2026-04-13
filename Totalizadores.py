@@ -145,7 +145,7 @@ elif chosen_id == "tab2":
             index=month-1)
         
     year = int(today.strftime("%Y"))
-    options_year = ["2024", "2025"]
+    options_year = ["2024", "2025", "2026", "2027", "2028", "2029", "2030"]
     #print(year)
     with col3:
         option_year = st.selectbox(
@@ -279,7 +279,7 @@ elif chosen_id == "tab3":
         
     today = datetime.datetime.now()
     year = int(today.strftime("%Y"))
-    options = ["2024", "2025"]
+    options = ["2024", "2025", "2026", "2027", "2028", "2029", "2030"]
     with col2:
         option_year = st.selectbox(
             "Selecione o ano",
