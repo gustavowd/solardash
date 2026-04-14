@@ -360,7 +360,7 @@ elif chosen_id == "tab2":
         yaxis_title=dict(text='Energia consumida em kwh'),
         showlegend=False,
         xaxis_dtick = 1,
-        xaxis_range=[1,number_of_days],
+        xaxis_range=[0.5, number_of_days + 0.5],
         height=500)
 
     # Plot!
