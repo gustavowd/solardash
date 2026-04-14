@@ -472,17 +472,48 @@ elif chosen_id == "tab3":
 
     #st.bar_chart(chart_data, height=500, y="Energia gerada em kwh")
     chart_data = chart_data.div(1000000)
+    #print(chart_data)
 
-    fig = px.bar(chart_data)
-    fig.update_layout(xaxis_title=dict(text='Meses do ano'),
-        yaxis_title=dict(text='Energia consumida em MWh'),
-        showlegend=False,
-        xaxis_dtick = 1,
-        xaxis_range=[1,12],
-        height=500)
+    #fig = px.bar(chart_data)
+    #fig.update_layout(xaxis_title=dict(text='Meses do ano'),
+    #    yaxis_title=dict(text='Energia consumida em MWh'),
+    #    showlegend=False,
+    #    xaxis_dtick = 1,
+    #    xaxis_range=[1,12],
+    #    height=500)
 
     # Plot!
+    #st.plotly_chart(fig, use_container_width=True)
+
+    # Se chart_data for uma Series, vamos resetar o índice
+    df_plot = chart_data.reset_index()
+    df_plot.columns = ['Mes', 'Consumo']
+
+#    2. Criando o gráfico com orientação vertical explícita (orientation='v')
+    fig = px.bar(
+        df_plot, 
+        x='Mes', 
+        y='Consumo', 
+        orientation='v'  # Força a orientação vertical
+    )
+
+    # 3. Ajustes de Layout
+    fig.update_layout(
+        xaxis_title='Meses do ano',
+        yaxis_title='Energia consumida em MWh',
+        showlegend=False,
+        # Força o eixo X a mostrar todos os números de 1 a 12
+        xaxis = dict(
+            tickmode = 'linear',
+            tick0 = 1,
+            dtick = 1,
+            range=[0.5, 12.5] # Um pouco de margem para as barras não cortarem
+        ),
+        height=500
+    )
+
     st.plotly_chart(fig, use_container_width=True)
+
 
     csv = chart_data.to_csv(index=True, sep=";", decimal=",").encode('utf-8')
     st.download_button(
