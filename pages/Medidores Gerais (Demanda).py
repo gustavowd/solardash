@@ -30,7 +30,7 @@ df = conn.query("select * from devices where device_type=3 order by device_name"
 devices = pd.DataFrame(df, columns=['device_name', 'device_id', 'device_type'])
 devices = devices.set_index('device_id')
 
-df_m = conn.query("select measurement_name, measurement_type_id from measurements natural join measurement_type where device_id=34 and measurement_time between '2024-05-12 20:20:01' and '2024-05-12 20:20:15' order by measurement_type_id")
+df_m = conn.query("select measurement_name, measurement_type_id from measurements natural join measurement_type where device_id=34 and measurement_time between '2026-05-12 16:20:01' and '2026-05-12 16:20:15' order by measurement_type_id")
 measurements = pd.DataFrame(df_m, columns=['measurement_name', 'measurement_type_id'])
 measurements = measurements.set_index('measurement_type_id')
 
