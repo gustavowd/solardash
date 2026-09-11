@@ -80,9 +80,14 @@ def equipment(devices, kind):
             group = st.selectbox('Unidade consumidora' if kind == 1 else 'Transformador',
                                  ['Total', *GROUPS[kind]], key=f'group_{kind}')
         defaults = list(labels) if group == 'Total' else [key for key, name in labels.items() if name in GROUPS[kind][group]]
-        ids = st.multiselect('Equipamentos', list(labels), default=defaults,
-                            format_func=lambda key: labels[key], key=f'devices_{kind}_{group}')
-    st.caption(f'{group} · {len(ids)} equipamento(s)')
+        with st.form(f'equipment_form_{kind}_{group}'):
+            draft = st.multiselect('Equipamentos', list(labels), default=defaults,
+                                   format_func=lambda key: labels[key], key=f'devices_{kind}_{group}')
+            if st.form_submit_button('Aplicar seleção', type='primary'):
+                st.session_state[f'equipment_applied_{kind}'] = (group, list(draft))
+    applied_group, ids = st.session_state.get(f'equipment_applied_{kind}', ('Total', list(labels)))
+    ids = [key for key in ids if key in labels]
+    st.caption(f'{applied_group} · {len(ids)} equipamento(s)')
     return ids
 
 

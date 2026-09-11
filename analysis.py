@@ -29,29 +29,28 @@ def readings(conn, ids, variables, start, end):
 
 
 def analyze(conn, devices, start, end):
-    equipment_col, params_col, download_col = st.columns([2, 2, 1])
     device_labels = {row.device_id: f'{CATEGORIES.get(row.device_type, "Equipamento")} · {row.device_name} · {row.device_id}'
                      for row in devices.itertuples()}
-    with equipment_col:
-        selected = st.session_state.get('analysis_equipment', list(devices.loc[devices.device_type == 1, 'device_id']))
-        with st.popover(f'Equipamentos · {len(selected)} selecionado(s)', use_container_width=True):
-            ids = st.multiselect('Equipamentos', list(device_labels), default=selected,
-                                format_func=lambda key: device_labels[key], key='analysis_equipment')
-    if not ids:
-        st.info('Selecione pelo menos um equipamento para consultar suas variáveis.')
-        return
     catalog = variable_catalog(conn)
     variable_labels = {row.measurement_type_id: f'{row.measurement_name} · {row.measurement_type_id}' for row in catalog.itertuples()}
-    with params_col:
-        # Descarta parâmetros removidos do cadastro.
-        previous = st.session_state.get('analysis_variables', [])
-        valid = [value for value in previous if value in variable_labels]
-        if previous != valid:
-            st.session_state.analysis_variables = valid
-        with st.popover(f'Parâmetros · {len(valid)} selecionado(s)', use_container_width=True):
-            variables = st.multiselect('Variáveis', list(variable_labels),
-                                       format_func=lambda key: variable_labels[key], key='analysis_variables')
-            st.caption('Todos os parâmetros cadastrados. Alguns podem não ter leituras nos equipamentos selecionados. Cada parâmetro tem seu próprio eixo vertical.')
+    default_ids = list(devices.loc[devices.device_type == 1, 'device_id'])
+    with st.form('analysis_selection'):
+        equipment_col, params_col = st.columns(2)
+        with equipment_col:
+            draft_ids = st.multiselect('Equipamentos', list(device_labels), default=default_ids,
+                                       format_func=lambda key: device_labels[key], key='analysis_equipment')
+        with params_col:
+            draft_variables = st.multiselect('Variáveis', list(variable_labels),
+                                             format_func=lambda key: variable_labels[key], key='analysis_variables')
+        if st.form_submit_button('Aplicar seleção', type='primary'):
+            st.session_state.analysis_applied = (list(draft_ids), list(draft_variables))
+    ids, variables = st.session_state.get('analysis_applied', ([], []))
+    ids = [key for key in ids if key in device_labels]
+    variables = [key for key in variables if key in variable_labels]
+    if not ids:
+        st.info('Selecione os equipamentos e variáveis e clique em Aplicar seleção.')
+        return
+    download_col = st.container()
     if not variables:
         st.info('Selecione potência, tensão, corrente ou outra variável disponível nos equipamentos.')
         return
