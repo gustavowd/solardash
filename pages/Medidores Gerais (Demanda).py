@@ -1,3 +1,4 @@
+from ui import setup_page, period_selector, render_chart
 import streamlit as st
 import pandas as pd
 import datetime
@@ -17,8 +18,8 @@ def print_full(x):
     pd.reset_option('display.float_format')
     pd.reset_option('display.max_colwidth')
 
-st.set_page_config(layout="wide")
-st.header('Dashboard de gestão energética da UTFPR / Campus Pato Branco')
+setup_page('Demanda de energia', 'Analise as medições gerais e o comportamento da demanda ao longo do tempo.')
+
 
 c = st.container()
 with c:
@@ -91,7 +92,7 @@ if len(d) == 2:
     )
 
     # Plot!
-    st.plotly_chart(fig, use_container_width=True)
+    render_chart(fig, use_container_width=True)
     
     csv = chart_data.to_csv(index=True, sep=";", decimal=",").encode('utf-8')
     st.download_button(
