@@ -178,3 +178,19 @@ solardash/
 - Nomes de equipamentos predefinidos e leituras históricas de referência precisam existir no banco. Sua ausência pode impedir a seleção ou provocar erros; o tratamento de bases vazias ainda não é uniforme.
 - O CSV contém os dados após os tratamentos da tela, incluindo agregações, conversões e ajustes de horário, quando aplicáveis.
 - O escopo atual é consulta, visualização e exportação CSV. Não há cadastro de equipamentos pela interface, controle remoto, alarmes automáticos, relatórios PDF ou cálculo financeiro implementados.
+
+## Visão geral — Monitorar
+
+A sidebar mantém as páginas individuais e pode ser recolhida ou reaberta pelo controle no canto superior esquerdo. A visão geral usa um cabeçalho compacto, com as abas Monitorar e Analisar. Analisar oferece acesso às páginas individuais existentes.
+
+Em Monitorar, selecione uma data inicial e final (iguais para um único dia). À direita, ative Geração (inversores), Consumo (medidores) e Consumo geral (medidor geral do campus). Os seletores de equipamentos preservam os grupos por unidade consumidora e transformador. As séries podem aparecer simultaneamente e ser exportadas em CSV.
+
+- Um dia: curvas de potência em kW, com médias por minuto somadas entre equipamentos.
+- Vários dias: barras de energia em kWh, agrupáveis por dia, mês ou ano. Geração e consumo usam os agregados anteriores, complementando o dia atual com o máximo registrado quando ainda não existe agregado para aquele equipamento, sem duplicá-lo.
+- Consumo geral: configure a variável e a unidade no seletor. Para vários dias, escolha um contador acumulado de energia; o cálculo usa a última menos a primeira leitura diária, não cobrindo os intervalos antes/depois dessas leituras. Reinícios do contador e dias com menos de duas leituras ficam sem valor.
+
+Na visão geral, a potência de inversores (variável 0) e medidores (variável 27) é dividida por 1.000 para apresentar ambas em kW, considerando as leituras de origem em W. A unidade da variável 27 deve ser confirmada na instalação. O complemento diário mantém a convenção anterior (7/1000 e 27/1000). Os horários são os retornados pelo banco e os limites abrangem o dia inteiro. As consultas usam cache de 60 segundos e não há atualização automática. Dados ausentes não são preenchidos com zero.
+
+Validação local: `python -m unittest discover -s tests -v`. Os testes de interface usam dados simulados; não validam a disponibilidade nem as unidades do banco real.
+
+Gráficos e CSV usam a mesma conversão. Não há multiplicador adicional na série Consumo; os agregados de energia permanecem divididos por 1.000 e apresentados em kWh.

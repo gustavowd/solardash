@@ -1,4 +1,10 @@
 :root { --navy: #102c4c; --orange: #f28b24; }
+[data-testid="stSidebarCollapseButton"] button { color: #ffffff; }
+.dashboard-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #dce4ed; }
+.dashboard-heading strong { font-size: 21px; }
+.dashboard-heading span { color: #63758b; font-size: 12px; }
+[data-testid="stMainBlockContainer"]:has(.dashboard-heading) { max-width: none; padding: 3rem 1.5rem 1rem; }
+[data-testid="stMainBlockContainer"]:has(.dashboard-heading) [data-testid="stVerticalBlock"] { gap: 0.65rem; }
 .stApp { background: #f3f6fa; color: var(--navy); }
 [data-testid="stHeader"] { background: #f3f6fa; }
 [data-testid="stMainBlockContainer"] { max-width: 1600px; padding: 2rem 3rem 4rem; }
