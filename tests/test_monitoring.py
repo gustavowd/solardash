@@ -6,9 +6,26 @@ import pandas as pd
 from streamlit.testing.v1 import AppTest
 from monitoring import counter_daily, energy, power
 from periods import preset_dates, month_end
+from analysis import variable_catalog
 
 
 class MonitoringTests(unittest.TestCase):
+    def test_catalog_does_not_scan_measurements(self):
+        conn = MagicMock()
+        variable_catalog(conn)
+        sql = conn.query.call_args.args[0]
+        self.assertIn('FROM measurement_type', sql)
+        self.assertNotIn('measurements', sql)
+
+    def test_pandas_database_error_shows_retry(self):
+        conn = MagicMock()
+        conn.query.side_effect = pd.errors.DatabaseError('statement timeout')
+        with patch('streamlit.connection', return_value=conn):
+            app = AppTest.from_file(str(Path(__file__).resolve().parents[1] / 'Totalizadores.py')).run()
+            self.assertFalse(app.exception)
+            self.assertTrue(app.error)
+            self.assertTrue(any(button.label == 'Tentar novamente' for button in app.button))
+
     def test_period_boundaries(self):
         self.assertEqual(preset_dates('Mês Anterior', date(2026, 1, 3)), (date(2025, 12, 1), date(2025, 12, 31)))
         self.assertEqual(preset_dates('Últimos 7 Dias', date(2026, 1, 3)), (date(2025, 12, 28), date(2026, 1, 3)))
@@ -50,7 +67,7 @@ class MonitoringTests(unittest.TestCase):
                 return pd.DataFrame({'device_id':[1, 2, 3], 'device_name':['Inversor', 'Medidor', 'Geral'], 'device_type':[1, 2, 3]})
             if 'FROM measurement_type' in sql:
                 return pd.DataFrame({'measurement_type_id':[10], 'measurement_name':['Potência geral']})
-            return pd.DataFrame({'time':pd.to_datetime([str(today)+' 10:00', str(today)+' 11:00']), 'device_id':[1, 1], 'value':[1000., 2000.]})
+            return pd.DataFrame({'time':pd.to_datetime([str(today)+' 10:00', str(today)+' 11:00']), 'device_id':[1, 1], 'measurement_type_id':[10, 10], 'value':[1000., 2000.]})
         conn.query.side_effect = query
         with patch('streamlit.connection', return_value=conn):
             app = AppTest.from_file(str(Path(__file__).resolve().parents[1] / 'Totalizadores.py')).run()
@@ -80,7 +97,12 @@ class MonitoringTests(unittest.TestCase):
             self.assertTrue(all(trace['type']=='bar' for trace in spec['data']))
             app.segmented_control[0].set_value('Analisar').run()
             self.assertFalse(app.exception)
-            self.assertGreaterEqual(len(app.get('page_link')), 5)
+            app.multiselect(key='analysis_variables').set_value([10]).run()
+            self.assertFalse(app.exception)
+            self.assertEqual(len(app.metric), 6)
+            self.assertEqual(app.metric[0].value, '2.000,00')
+            spec = json.loads(app.get('plotly_chart')[0].proto.spec)
+            self.assertTrue(all(trace['type']=='scatter' for trace in spec['data']))
 
 
 if __name__ == '__main__':

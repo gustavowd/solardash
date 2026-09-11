@@ -181,7 +181,7 @@ solardash/
 
 ## Visão geral — Monitorar
 
-A sidebar mantém as páginas individuais e pode ser recolhida ou reaberta pelo controle no canto superior esquerdo. A visão geral usa um cabeçalho compacto, com as abas Monitorar e Analisar. Analisar oferece acesso às páginas individuais existentes.
+A sidebar mantém as páginas individuais e pode ser recolhida ou reaberta pelo controle no canto superior esquerdo. A visão geral usa um cabeçalho compacto, com as abas Monitorar e Analisar. Analisar apresenta as variáveis individuais por equipamento na própria visão geral. As páginas anteriores continuam acessíveis na sidebar.
 
 Em Monitorar, selecione uma data inicial e final (iguais para um único dia). À direita, ative Geração (inversores), Consumo (medidores) e Consumo geral (medidor geral do campus). Os seletores de equipamentos preservam os grupos por unidade consumidora e transformador. As séries podem aparecer simultaneamente e ser exportadas em CSV.
 
@@ -194,3 +194,10 @@ Na visão geral, a potência de inversores (variável 0) e medidores (variável 
 Validação local: `python -m unittest discover -s tests -v`. Os testes de interface usam dados simulados; não validam a disponibilidade nem as unidades do banco real.
 
 Gráficos e CSV usam a mesma conversão. Não há multiplicador adicional na série Consumo; os agregados de energia permanecem divididos por 1.000 e apresentados em kWh.
+
+
+### Analisar — variáveis por equipamento
+
+Selecione um ou mais equipamentos e parâmetros (potência, tensão, corrente e outras variáveis cadastradas), usando o mesmo seletor de período com atalhos. O seletor carrega todos os parâmetros diretamente do cadastro, sem percorrer o histórico de medições. Parâmetros sem leituras na seleção apresentam uma mensagem de ausência de dados. Cada combinação equipamento/parâmetro tem sua própria série de linhas, inclusive para vários dias; não há soma entre equipamentos nem conversão dos valores de origem.
+
+Parâmetros diferentes aparecem em painéis com escalas verticais independentes. A lateral mostra máximo, mínimo, média, variação, desvio padrão populacional e mediana da série escolhida, calculados sobre as leituras disponíveis. O CSV preserva as leituras retornadas, inclusive registros no mesmo horário, com identificadores e nomes dos equipamentos e parâmetros. A unidade não é inferida pelo nome: os valores seguem o cadastro do banco.

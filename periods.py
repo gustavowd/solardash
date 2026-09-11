@@ -95,7 +95,7 @@ def period_dialog():
                     st.warning('Não há medições para determinar o início do período.')
                     return
                 chosen = pd.Timestamp(result.iloc[0]['first']).date(), date.today()
-            except (SQLAlchemyError, StreamlitSecretNotFoundError):
+            except (SQLAlchemyError, pd.errors.DatabaseError, StreamlitSecretNotFoundError):
                 st.error('Não foi possível consultar a primeira medição. Tente novamente.')
                 return
         if not chosen or len(chosen) != 2 or chosen[0] > chosen[1]:
