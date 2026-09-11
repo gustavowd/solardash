@@ -41,3 +41,9 @@
  .hero { padding: 24px; } .hero-sun { display: none; }
  .topline { flex-wrap: wrap; font-size: 9px; }
 }
+
+/* Seletor de período em três colunas, conforme a referência. */
+[data-testid="stDialog"]:has(.st-key-period_presets) [role="dialog"] { max-width: 680px; }
+.st-key-period_presets button { min-height: 52px; border-radius: 10px; font-size: 14px; }
+[data-testid="stDialog"]:has(.st-key-period_presets) button[kind="primary"] { background: #0734cf; border-color: #0734cf; color: white; }
+[data-testid="stDialog"]:has(.st-key-period_presets) button[kind="primary"]:hover { background: #062aa8; border-color: #062aa8; }

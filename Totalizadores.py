@@ -1,10 +1,10 @@
 """Visão geral: geração e consumo no mesmo período."""
-from datetime import date
 import streamlit as st
 from sqlalchemy.exc import SQLAlchemyError
 from streamlit.errors import StreamlitSecretNotFoundError
 from ui import setup_page, PAGES
 from monitoring import monitor
+from periods import period_selector
 
 setup_page('Visão geral', 'Geração e consumo do campus', compact=True)
 nav, period = st.columns([3, 2])
@@ -20,19 +20,14 @@ if mode == 'Analisar':
             st.page_link(path, label=label, icon=icon, use_container_width=True)
 else:
     with period:
-        with st.popover('📅 Selecionar período', use_container_width=True):
-            dates = st.date_input('Data inicial e final', value=(date.today(), date.today()), format='DD/MM/YYYY')
-    if len(dates) != 2:
-        st.info('Selecione a data final. Para um único dia, escolha a mesma data nos dois campos.')
-    else:
-        start, end = dates
-        st.caption(f'{start:%d/%m/%Y} — {end:%d/%m/%Y} · {"Potência ao longo do dia" if start == end else "Energia no período"}')
-        try:
-            conn = st.connection('my_database', connect_args={'connect_timeout': 5, 'options': '-c statement_timeout=15000'}, pool_timeout=5)
-            with st.spinner('Carregando equipamentos…'):
-                devices = conn.query('SELECT device_id, device_name, device_type FROM devices ORDER BY device_name', ttl=600, show_spinner=False)
-            monitor(conn, devices, start, end)
-        except (SQLAlchemyError, StreamlitSecretNotFoundError):
-            st.error('Não foi possível carregar os dados. Verifique a conexão com o banco do campus.')
-            if st.button('Tentar novamente'):
-                st.rerun()
+        start, end = period_selector()
+    st.caption(f'{start:%d/%m/%Y} — {end:%d/%m/%Y} · {"Potência ao longo do dia" if start == end else "Energia no período"}')
+    try:
+        conn = st.connection('my_database', connect_args={'connect_timeout': 5, 'options': '-c statement_timeout=15000'}, pool_timeout=5)
+        with st.spinner('Carregando equipamentos…'):
+            devices = conn.query('SELECT device_id, device_name, device_type FROM devices ORDER BY device_name', ttl=600, show_spinner=False)
+        monitor(conn, devices, start, end)
+    except (SQLAlchemyError, StreamlitSecretNotFoundError):
+        st.error('Não foi possível carregar os dados. Verifique a conexão com o banco do campus.')
+        if st.button('Tentar novamente'):
+            st.rerun()

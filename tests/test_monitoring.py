@@ -5,9 +5,16 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 from streamlit.testing.v1 import AppTest
 from monitoring import counter_daily, energy, power
+from periods import preset_dates, month_end
 
 
 class MonitoringTests(unittest.TestCase):
+    def test_period_boundaries(self):
+        self.assertEqual(preset_dates('Mês Anterior', date(2026, 1, 3)), (date(2025, 12, 1), date(2025, 12, 31)))
+        self.assertEqual(preset_dates('Últimos 7 Dias', date(2026, 1, 3)), (date(2025, 12, 28), date(2026, 1, 3)))
+        self.assertEqual(month_end(date(2024, 2, 1)), date(2024, 2, 29))
+
+
     def test_power_converts_watts_to_kw(self):
         conn = MagicMock()
         conn.query.return_value = pd.DataFrame({
@@ -58,7 +65,16 @@ class MonitoringTests(unittest.TestCase):
             spec = json.loads(app.get('plotly_chart')[0].proto.spec)
             self.assertEqual(len(spec['data']), 3)
             self.assertTrue(all(trace['type']=='scatter' for trace in spec['data']))
-            app.date_input[0].set_value((today-timedelta(days=90), today)).run()
+            app.button(key='open_period').click().run()
+            app.button(key='preset_Últimos 7 Dias').click().run()
+            self.assertEqual(app.session_state.monitor_period, (today, today))
+            next(button for button in app.button if button.label == 'Cancelar').click().run()
+            self.assertEqual(app.session_state.monitor_period, (today, today))
+            app.button(key='open_period').click().run()
+            self.assertEqual(app.session_state.period_draft_preset, 'Hoje')
+            app.button(key='preset_Período de Dias').click().run()
+            app.date_input(key='period_days').set_value((today-timedelta(days=90), today)).run()
+            next(button for button in app.button if button.label == 'Aplicar').click().run()
             self.assertFalse(app.exception)
             spec = json.loads(app.get('plotly_chart')[0].proto.spec)
             self.assertTrue(all(trace['type']=='bar' for trace in spec['data']))
