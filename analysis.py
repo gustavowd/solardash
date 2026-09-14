@@ -1,5 +1,6 @@
 """Análise de variáveis individuais, preservando os valores do banco."""
 from datetime import timedelta
+import re
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -9,10 +10,20 @@ from ui import render_chart
 CATEGORIES = {1: 'Inversores', 2: 'Medidores', 3: 'Medidor geral', 4: 'Estação solarimétrica', 5: 'Cargas'}
 
 
-def variable_catalog(conn):
-    # O cadastro é pequeno; não percorre o histórico para montar um seletor.
+def variable_unit(name):
+    match = re.search(r'\(([^()]+)\)\s*$', name)
+    return match.group(1).strip() if match else 'Valor de origem'
+
+
+def variable_catalog(conn, kind, start, end):
     return conn.query(
-        'SELECT measurement_type_id, measurement_name FROM measurement_type ORDER BY measurement_type_id',
+        'SELECT mt.measurement_type_id, mt.measurement_name FROM measurement_type mt '
+        'WHERE EXISTS (SELECT 1 FROM measurements m '
+        'JOIN devices d ON d.device_id = m.device_id '
+        'WHERE d.device_type = :kind AND m.measurement_type_id = mt.measurement_type_id '
+        'AND m.measurement_time >= :start AND m.measurement_time < :end) '
+        'ORDER BY mt.measurement_type_id',
+        params={'kind': int(kind), 'start': start, 'end': end + timedelta(days=1)},
         ttl=600, show_spinner=False)
 
 
@@ -29,11 +40,28 @@ def readings(conn, ids, variables, start, end):
 
 
 def analyze(conn, devices, start, end):
+    kind = st.selectbox('Tipo de equipamento', list(CATEGORIES),
+                        format_func=CATEGORIES.get, key='analysis_kind')
+    devices = devices.loc[devices.device_type == kind]
+    context = (kind, start, end)
+    if st.session_state.get('analysis_context') != context:
+        for key in ['analysis_equipment', 'analysis_variables', 'analysis_applied', 'analysis_stats']:
+            st.session_state.pop(key, None)
+        st.session_state.analysis_context = context
+    if devices.empty:
+        st.info('Não há equipamentos cadastrados neste tipo.')
+        return
     device_labels = {row.device_id: f'{CATEGORIES.get(row.device_type, "Equipamento")} · {row.device_name} · {row.device_id}'
                      for row in devices.itertuples()}
-    catalog = variable_catalog(conn)
+    with st.spinner('Carregando variáveis do tipo de equipamento…'):
+        catalog = variable_catalog(conn, kind, start, end)
+    if catalog.empty:
+        st.info('Não há variáveis com leituras para este tipo de equipamento no período selecionado.')
+        return
     variable_labels = {row.measurement_type_id: f'{row.measurement_name} · {row.measurement_type_id}' for row in catalog.itertuples()}
-    default_ids = list(devices.loc[devices.device_type == 1, 'device_id'])
+    variable_units = {variable_labels[row.measurement_type_id]: variable_unit(row.measurement_name)
+                      for row in catalog.itertuples()}
+    default_ids = list(devices.device_id)
     with st.form('analysis_selection'):
         equipment_col, params_col = st.columns(2)
         with equipment_col:
@@ -79,6 +107,10 @@ def analyze(conn, devices, start, end):
         if facet:
             fig.update_yaxes(matches=None)
             fig.for_each_annotation(lambda item: item.update(text=item.text.replace('Parâmetro=', '')))
+        series_units = dict(zip(data['Série'], data['Parâmetro'].map(variable_units)))
+        for trace in fig.data:
+            axis = 'yaxis' + trace.yaxis[1:]
+            fig.layout[axis].title.text = series_units[trace.name]
         render_chart(fig, use_container_width=True)
     with stats, st.container(border=True):
         name = st.selectbox('Estatísticas da série', list(data['Série'].unique()), key='analysis_stats')

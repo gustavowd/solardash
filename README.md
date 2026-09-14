@@ -198,7 +198,9 @@ Gráficos e CSV usam a mesma conversão. Não há multiplicador adicional na sé
 
 ### Analisar — variáveis por equipamento
 
-Selecione um ou mais equipamentos e parâmetros (potência, tensão, corrente e outras variáveis cadastradas), usando o mesmo seletor de período com atalhos. O seletor carrega todos os parâmetros diretamente do cadastro, sem percorrer o histórico de medições. Parâmetros sem leituras na seleção apresentam uma mensagem de ausência de dados. Cada combinação equipamento/parâmetro tem sua própria série de linhas, inclusive para vários dias; não há soma entre equipamentos nem conversão dos valores de origem.
+Selecione primeiro o tipo de equipamento: inversores, medidores, medidor geral, estação solarimétrica ou cargas. Os equipamentos são filtrados por essa categoria, e os parâmetros listados são aqueles com leituras para o tipo no período selecionado. Os nomes e IDs do cadastro são preservados, distinguindo, por exemplo, a potência de ID 0 dos inversores da potência de ID 27 dos medidores. A consulta de disponibilidade usa cache de 600 segundos. Trocar o tipo ou o período limpa a seleção anterior de análise.
+
+Selecione um ou mais equipamentos e parâmetros (potência, tensão, corrente e outras variáveis cadastradas), usando o mesmo seletor de período com atalhos. Parâmetros sem leituras nos equipamentos escolhidos apresentam uma mensagem de ausência de dados. Cada combinação equipamento/parâmetro tem sua própria série de linhas, inclusive para vários dias; não há soma entre equipamentos nem conversão dos valores de origem.
 
 Parâmetros diferentes aparecem em painéis com escalas verticais independentes. A lateral mostra máximo, mínimo, média, variação, desvio padrão populacional e mediana da série escolhida, calculados sobre as leituras disponíveis. O CSV preserva as leituras retornadas, inclusive registros no mesmo horário, com identificadores e nomes dos equipamentos e parâmetros. A unidade não é inferida pelo nome: os valores seguem o cadastro do banco.
 

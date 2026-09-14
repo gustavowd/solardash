@@ -35,12 +35,41 @@ class MonitoringTests(unittest.TestCase):
             self.assertEqual(list(fig.data[0].y), [30., 40.])
             self.assertEqual(fig.layout.xaxis.type, 'category')
 
-    def test_catalog_does_not_scan_measurements(self):
+    def test_catalog_filters_type_and_period(self):
         conn = MagicMock()
-        variable_catalog(conn)
+        variable_catalog(conn, 2, date(2026, 1, 1), date(2026, 1, 31))
         sql = conn.query.call_args.args[0]
         self.assertIn('FROM measurement_type', sql)
-        self.assertNotIn('measurements', sql)
+        self.assertIn('d.device_type = :kind', sql)
+        self.assertIn('m.measurement_type_id = mt.measurement_type_id', sql)
+        self.assertEqual(conn.query.call_args.kwargs['params'], {
+            'kind': 2, 'start': date(2026, 1, 1), 'end': date(2026, 2, 1),
+        })
+
+    def test_analysis_switches_equipment_type(self):
+        conn = MagicMock()
+        def query(sql, **kwargs):
+            if 'FROM measurement_type' in sql:
+                variable = 0 if kwargs['params']['kind'] == 1 else 27
+                return pd.DataFrame({'measurement_type_id': [variable], 'measurement_name': ['Real Power']})
+            if 'FROM devices' in sql:
+                return pd.DataFrame({'device_id': [1, 2], 'device_name': ['Inversor', 'Medidor'], 'device_type': [1, 2]})
+            return pd.DataFrame()
+        conn.query.side_effect = query
+        with patch('streamlit.connection', return_value=conn):
+            app = AppTest.from_file(str(Path(__file__).resolve().parents[1] / 'Totalizadores.py')).run()
+            app.segmented_control[0].set_value('Analisar').run()
+            self.assertEqual(app.multiselect(key='analysis_equipment').value, [1])
+            self.assertEqual(app.multiselect(key='analysis_variables').options, ['Real Power · 0'])
+            app.multiselect(key='analysis_variables').set_value([0])
+            app.button(key='FormSubmitter:analysis_selection-Aplicar seleção').click().run()
+            self.assertEqual(app.session_state.analysis_applied, ([1], [0]))
+            app.selectbox(key='analysis_kind').set_value(2).run()
+            self.assertFalse(app.exception)
+            self.assertEqual(app.multiselect(key='analysis_equipment').value, [2])
+            self.assertEqual(app.multiselect(key='analysis_variables').options, ['Real Power · 27'])
+            self.assertEqual(app.multiselect(key='analysis_variables').value, [])
+            self.assertNotIn('analysis_applied', app.session_state)
 
     def test_pandas_database_error_shows_retry(self):
         conn = MagicMock()
