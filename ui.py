@@ -4,30 +4,10 @@ from html import escape
 
 import streamlit as st
 
-PAGES = [
-    ("Totalizadores.py", "Visão geral", "☀️"),
-    ("pages/Totalizadores dos medidores.py", "Consumo consolidado", "⚡"),
-    ("pages/Inversores.py", "Inversores", "🔌"),
-    ("pages/Medidores.py", "Medidores", "📊"),
-    ("pages/Medidores Gerais (Demanda).py", "Demanda", "📈"),
-    ("pages/Cargas.py", "Cargas", "🔋"),
-    ("pages/Estação Solarimétrica.py", "Estação solarimétrica", "🌤️"),
-]
-
-
 def setup_page(title, description, compact=False):
-    st.set_page_config(page_title=f"{title} | SolarDash", page_icon="☀️", layout="wide", initial_sidebar_state="auto")
+    st.set_page_config(page_title=f"{title} | SolarDash", page_icon="☀️", layout="wide", initial_sidebar_state="collapsed")
     css = (Path(__file__).parent / "assets" / "theme.css").read_text()
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
-    with st.sidebar:
-        st.markdown('<div class="brand"><span class="brand-icon">☀</span> Solar<span>Dash</span></div>'
-                    '<div class="brand-caption">GESTÃO ENERGÉTICA</div>', unsafe_allow_html=True)
-        st.markdown('<div class="campus"><strong>UTFPR</strong><br>Campus Pato Branco</div>'
-                    '<div class="nav-label">MONITORAMENTO</div>', unsafe_allow_html=True)
-        for path, label, icon in PAGES:
-            st.page_link(path, label=label, icon=icon)
-        st.markdown('<div class="sidebar-footer">Energia que transforma.<br>'
-                    '<span>Monitoramento energético do campus</span></div>', unsafe_allow_html=True)
     if compact:
         st.markdown(f'<div class="dashboard-heading"><strong>{escape(title)}</strong>'
                     '<span>UTFPR · Campus Pato Branco</span></div>', unsafe_allow_html=True)

@@ -181,7 +181,7 @@ solardash/
 
 ## Visão geral — Monitorar
 
-A sidebar mantém as páginas individuais e pode ser recolhida ou reaberta pelo controle no canto superior esquerdo. A visão geral usa um cabeçalho compacto, com as abas Monitorar e Analisar. Analisar apresenta as variáveis individuais por equipamento na própria visão geral. As páginas anteriores continuam acessíveis na sidebar.
+A aplicação usa somente a página Visão geral, com cabeçalho compacto e as abas Monitorar e Analisar, sem sidebar. Analisar apresenta as variáveis individuais por tipo de equipamento. Os arquivos das páginas anteriores permanecem no repositório como legado, mas não são registrados na navegação da aplicação.
 
 Em Monitorar, selecione uma data inicial e final (iguais para um único dia). À direita, ative Geração (inversores), Consumo (medidores) e Consumo geral (medidor geral do campus). Os seletores de equipamentos preservam os grupos por unidade consumidora e transformador. As séries podem aparecer simultaneamente e ser exportadas em CSV.
 
