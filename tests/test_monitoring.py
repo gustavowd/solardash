@@ -10,6 +10,19 @@ from analysis import variable_catalog
 
 
 class MonitoringTests(unittest.TestCase):
+    def test_period_apply_closes_dialog_repeatedly(self):
+        app = AppTest.from_string('from periods import period_selector\nperiod_selector()').run()
+        for preset in ['Ontem', 'Últimos 7 Dias', 'Últimos 7 Dias', 'Ano Atual']:
+            app.button(key='open_period').click().run()
+            app.button(key=f'preset_{preset}').click().run()
+            next(button for button in app.button if button.label == 'Aplicar').click().run()
+            self.assertFalse(app.exception)
+            self.assertFalse(app.session_state.period_open)
+            self.assertEqual(app.session_state.monitor_period, preset_dates(preset))
+            self.assertFalse(any(button.label == 'Aplicar' for button in app.button))
+            app.run()
+            self.assertFalse(app.session_state.period_open)
+
     def test_general_energy_batches_long_period_without_duplicate_days(self):
         def sample(conn, ids, variable, start, end, divisor):
             return pd.Series(60., index=pd.date_range(str(start), pd.Timestamp(end) + pd.Timedelta(days=1), freq='min', inclusive='left'))

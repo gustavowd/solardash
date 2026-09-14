@@ -48,6 +48,18 @@ def close_period():
     st.session_state.period_open = False
 
 
+def open_period():
+    start, _ = st.session_state.monitor_period
+    st.session_state.period_draft_preset = st.session_state.get('period_applied_preset', 'Hoje')
+    # Cada abertura começa com os valores aplicados, descartando edições canceladas.
+    for key in ['period_day', 'period_days', 'period_single_month', 'period_single_year',
+                'period_start_month', 'period_start_year', 'period_end_month', 'period_end_year',
+                'period_year_start', 'period_year_end']:
+        st.session_state.pop(key, None)
+    st.session_state.period_day = start
+    st.session_state.period_open = True
+
+
 @st.dialog('Selecionar Período', width='large', on_dismiss=close_period)
 def period_dialog():
     preset = st.session_state.period_draft_preset
@@ -111,15 +123,8 @@ def period_selector():
     if 'monitor_period' not in st.session_state:
         st.session_state.monitor_period = (date.today(), date.today())
     start, end = st.session_state.monitor_period
-    if st.button(f'📅 {start:%d/%m/%Y} — {end:%d/%m/%Y}', key='open_period', use_container_width=True):
-        st.session_state.period_draft_preset = st.session_state.get('period_applied_preset', 'Hoje')
-        # Cada abertura começa com os valores aplicados, descartando edições canceladas.
-        for key in ['period_day', 'period_days', 'period_single_month', 'period_single_year',
-                    'period_start_month', 'period_start_year', 'period_end_month', 'period_end_year',
-                    'period_year_start', 'period_year_end']:
-            st.session_state.pop(key, None)
-        st.session_state.period_day = start
-        st.session_state.period_open = True
+    st.button(f'📅 {start:%d/%m/%Y} — {end:%d/%m/%Y}', key='open_period',
+              use_container_width=True, on_click=open_period)
     if st.session_state.get('period_open', False):
         period_dialog()
     return start, end
