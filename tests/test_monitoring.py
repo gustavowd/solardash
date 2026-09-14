@@ -182,8 +182,8 @@ class MonitoringTests(unittest.TestCase):
         with patch('streamlit.connection', return_value=conn):
             app = AppTest.from_file(str(Path(__file__).resolve().parents[1] / 'Totalizadores.py')).run()
             self.assertFalse(app.exception)
-            self.assertFalse(app.sidebar.get('page_link'))
-            self.assertFalse(app.sidebar.get('markdown'))
+            self.assertEqual(len(app.sidebar.get('page_link')), 8)
+            self.assertTrue(any('sidebar-campus-logo' in block.value for block in app.sidebar.get('markdown')))
             app.checkbox(key='enabled_2').check().run()
             app.checkbox(key='enabled_3').check().run()
             self.assertNotIn('devices_3_Total', [widget.key for widget in app.multiselect])

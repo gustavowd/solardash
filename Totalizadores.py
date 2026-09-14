@@ -3,7 +3,7 @@ import streamlit as st
 from pandas.errors import DatabaseError
 from sqlalchemy.exc import SQLAlchemyError
 from streamlit.errors import StreamlitSecretNotFoundError
-from ui import setup_page
+from ui import setup_page, render_sidebar
 from monitoring import monitor
 from analysis import analyze
 from periods import period_selector
@@ -33,4 +33,34 @@ def overview():
             st.rerun()
 
 
-st.navigation([st.Page(overview, title='Visão geral', default=True)], position='hidden').run()
+def about():
+    setup_page('Sobre', 'Monitoramento energético da UTFPR — Campus Pato Branco', compact=True)
+    st.subheader('SolarDash')
+    st.write('Painel de acompanhamento da geração fotovoltaica e do consumo de energia do campus. '
+             'Reúne medições dos equipamentos, séries históricas e exportação de dados em CSV.')
+    st.subheader('Dados e medições')
+    st.write('As leituras são obtidas do banco de dados da instalação. A coleta é realizada por sistemas externos; '
+             'a disponibilidade dos resultados depende dos registros de cada equipamento.')
+    st.write('Potência é apresentada em W ou kW, e energia em kWh, conforme a visualização. '
+             'Na análise individual, as unidades seguem o cadastro das variáveis.')
+    st.subheader('Instituição')
+    st.write('Universidade Tecnológica Federal do Paraná — Campus Pato Branco.')
+
+
+pages = {
+    'Principal': [
+        st.Page(overview, title='Dashboard', icon=':material/dashboard:', default=True),
+        st.Page(about, title='Sobre', icon=':material/info:', url_path='sobre'),
+    ],
+    'Equipamentos': [
+        st.Page('pages/Totalizadores dos medidores.py', title='Consumo consolidado', icon=':material/bar_chart:'),
+        st.Page('pages/Inversores.py', title='Inversores', icon=':material/solar_power:'),
+        st.Page('pages/Medidores.py', title='Medidores', icon=':material/speed:'),
+        st.Page('pages/Medidores Gerais (Demanda).py', title='Demanda', icon=':material/monitoring:'),
+        st.Page('pages/Cargas.py', title='Cargas', icon=':material/electrical_services:'),
+        st.Page('pages/Estação Solarimétrica.py', title='Estação solarimétrica', icon=':material/thermostat:'),
+    ],
+}
+selected_page = st.navigation(pages, position='hidden')
+render_sidebar(pages)
+selected_page.run()
