@@ -7,6 +7,16 @@ from monitor_groups import GROUPS
 from ui import render_chart
 
 
+def campus_index(values):
+    # Datas sem fuso dos agregados já representam o calendário local.
+    def local(value):
+        timestamp = pd.Timestamp(value)
+        if timestamp.tzinfo is not None:
+            timestamp = timestamp.tz_convert('America/Sao_Paulo').tz_localize(None)
+        return timestamp
+    return pd.DatetimeIndex([local(value) for value in values])
+
+
 def device_params(ids):
     params = {f'd{i}': int(value) for i, value in enumerate(ids)}
     return ','.join(f':{key}' for key in params), params
@@ -62,30 +72,51 @@ def counter_daily(frame):
 
 
 def general_energy(conn, ids, variable, start, end, divisor):
-    slots, params = device_params(ids)
-    params.update(variable=int(variable), start=start, end=end+timedelta(days=1))
-    frame = conn.query(
-        f"SELECT measurement_time AS time, device_id, measurement_value AS value FROM measurements WHERE device_id IN ({slots}) "
-        "AND measurement_type_id=:variable AND measurement_time >= :start AND measurement_time < :end ORDER BY measurement_time",
-        params=params, ttl=60, show_spinner=False)
-    return counter_daily(frame) / divisor
+    totals = []
+    cursor = start
+    while cursor <= end:
+        last = min(cursor + timedelta(days=6), end)
+        # Um dia de sobreposição preserva o intervalo que termina à meia-noite.
+        values = power(conn, ids, variable, cursor, min(last + timedelta(days=1), end), divisor)
+        daily = power_energy_daily(values)
+        if not daily.empty:
+            totals.append(daily.loc[(daily.index.date >= cursor) & (daily.index.date <= last)])
+        cursor = last + timedelta(days=1)
+    return pd.concat(totals).sort_index() if totals else pd.Series(dtype=float)
+
+
+def power_energy_daily(values):
+    values = values.sort_index().copy()
+    if values.empty:
+        return values
+    values.index = campus_index(values.index)
+    hours = values.index.to_series().diff().dt.total_seconds() / 3600
+    # Integra apenas minutos consecutivos, sem estimar energia nas lacunas.
+    valid = hours.eq(1 / 60)
+    amounts = ((values + values.shift()) / 2 * hours).where(valid)
+    days = (values.index - pd.Timedelta(seconds=1)).normalize()
+    return amounts.groupby(days).sum(min_count=1)
 
 
 def equipment(devices, kind):
     available = devices[devices.device_type == kind]
     labels = dict(zip(available.device_id, available.device_name))
+    initial_ids = list(labels)
+    if kind == 3:
+        initial_ids = [key for key, name in labels.items()
+                       if 'geral' in name.casefold() and 'utfpr' in name.casefold()][:1]
     group = 'Total'
     with st.popover('Selecionar equipamentos', use_container_width=True):
         if kind in GROUPS:
             group = st.selectbox('Unidade consumidora' if kind == 1 else 'Transformador',
                                  ['Total', *GROUPS[kind]], key=f'group_{kind}')
-        defaults = list(labels) if group == 'Total' else [key for key, name in labels.items() if name in GROUPS[kind][group]]
+        defaults = initial_ids if group == 'Total' else [key for key, name in labels.items() if name in GROUPS[kind][group]]
         with st.form(f'equipment_form_{kind}_{group}'):
             draft = st.multiselect('Equipamentos', list(labels), default=defaults,
                                    format_func=lambda key: labels[key], key=f'devices_{kind}_{group}')
             if st.form_submit_button('Aplicar seleção', type='primary'):
                 st.session_state[f'equipment_applied_{kind}'] = (group, list(draft))
-    applied_group, ids = st.session_state.get(f'equipment_applied_{kind}', ('Total', list(labels)))
+    applied_group, ids = st.session_state.get(f'equipment_applied_{kind}', ('Total', initial_ids))
     ids = [key for key in ids if key in labels]
     st.caption(f'{applied_group} · {len(ids)} equipamento(s)')
     return ids
@@ -101,24 +132,14 @@ def monitor(conn, devices, start, end):
         for kind, label in [(1, 'Geração'), (2, 'Consumo'), (3, 'Consumo geral')]:
             if not st.checkbox(label, value=kind == 1, key=f'enabled_{kind}'):
                 continue
-            ids = equipment(devices, kind)
+            ids = [34] if kind == 3 else equipment(devices, kind)
             if not ids:
                 st.caption('Selecione ao menos um equipamento.')
                 continue
             # Potência de inversores e medidores: W → kW no mesmo eixo.
             variable, divisor = (0, 1000) if kind == 1 else (27, 1000)
             if kind == 3:
-                with st.popover('Configurar medição', use_container_width=True):
-                    catalog = conn.query('SELECT measurement_type_id, measurement_name FROM measurement_type ORDER BY measurement_type_id', ttl=600, show_spinner=False)
-                    labels = dict(zip(catalog.measurement_type_id, catalog.measurement_name))
-                    variable = st.selectbox('Potência' if daily else 'Contador acumulado de energia', list(labels), index=None,
-                                            format_func=lambda key: labels[key], key=f'general_variable_{daily}')
-                    unit = st.selectbox('Unidade de origem', ['W', 'kW'] if daily else ['Wh', 'kWh'], index=None, key=f'general_unit_{daily}')
-                    st.caption('Para energia, usamos a última menos a primeira leitura de cada dia. Reinícios do contador e dias com menos de duas leituras ficam sem valor.')
-                if variable is None or unit is None:
-                    st.caption('Configure a variável e a unidade do medidor geral.')
-                    continue
-                divisor = 1000 if unit in ['W', 'Wh'] else 1
+                variable, divisor = 42, 1000
             selections.append((kind, label, ids, variable, divisor))
         if not daily:
             preset = st.session_state.get('period_applied_preset')
@@ -137,6 +158,10 @@ def monitor(conn, devices, start, end):
                     series[label] = energy(conn, ids, kind, start, end)
                 else:
                     series[label] = general_energy(conn, ids, variable, start, end, divisor)
+        for label, values in series.items():
+            values = values.copy()
+            values.index = campus_index(values.index)
+            series[label] = values
         frame = pd.DataFrame(series).sort_index()
         if frame.empty or frame.dropna(how='all').empty:
             st.info('Selecione séries e equipamentos com dados disponíveis no período.')
@@ -155,3 +180,5 @@ def monitor(conn, devices, start, end):
         st.download_button('↓ Download CSV', frame.to_csv(sep=';', decimal=',').encode('utf-8'), 'monitoramento.csv', 'text/csv')
         if not daily:
             st.caption('Totais dos registros disponíveis; lacunas não significam zero. O dia atual usa as medições quando ainda não existe agregado, seguindo a convenção anterior.')
+            if any(kind == 3 for kind, *_ in selections):
+                st.caption('Consumo geral: energia estimada pela potência real entre minutos consecutivos disponíveis; lacunas ficam fora do total.')

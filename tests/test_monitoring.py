@@ -4,12 +4,52 @@ from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
 import pandas as pd
 from streamlit.testing.v1 import AppTest
-from monitoring import counter_daily, energy, power
+from monitoring import counter_daily, energy, power, general_energy, campus_index
 from periods import preset_dates, month_end
 from analysis import variable_catalog
 
 
 class MonitoringTests(unittest.TestCase):
+    def test_general_energy_batches_long_period_without_duplicate_days(self):
+        def sample(conn, ids, variable, start, end, divisor):
+            return pd.Series(60., index=pd.date_range(str(start), pd.Timestamp(end) + pd.Timedelta(days=1), freq='min', inclusive='left'))
+        with patch('monitoring.power', side_effect=sample) as query:
+            result = general_energy(MagicMock(), [34], 42, date(2026, 1, 1), date(2026, 1, 15), 1000)
+        self.assertEqual(query.call_count, 3)
+        self.assertTrue(result.index.is_unique)
+        self.assertEqual(len(result), 15)
+        self.assertAlmostEqual(result.loc['2026-01-07'], 1440.)
+        self.assertAlmostEqual(result.loc['2026-01-14'], 1440.)
+        self.assertAlmostEqual(result.iloc[-1], 1439.)
+
+    def test_campus_index_preserves_daily_dates_and_converts_instants(self):
+        index = campus_index([
+            pd.Timestamp('2026-01-01'),
+            pd.Timestamp('2026-01-01 03:00:00+00:00'),
+            pd.Timestamp('2026-01-01 00:00:00-03:00'),
+        ])
+        self.assertEqual(list(index), [pd.Timestamp('2026-01-01')] * 3)
+
+    def test_general_energy_uses_campus_day(self):
+        values = pd.Series([60., 60.], index=pd.to_datetime([
+            '2026-01-02 01:00:00+00:00', '2026-01-02 01:01:00+00:00',
+        ]))
+        with patch('monitoring.power', return_value=values):
+            result = general_energy(MagicMock(), [34], 42, date(2026, 1, 1), date(2026, 1, 2), 1000)
+        combined = pd.DataFrame({'Geração': pd.Series([2.], index=[pd.Timestamp('2026-01-01')]),
+                                 'Consumo geral': result})
+        self.assertEqual(len(combined), 1)
+        self.assertEqual(combined.iloc[0].tolist(), [2., 1.])
+
+    def test_general_energy_integrates_power_without_bridging_gaps(self):
+        values = pd.Series([60., 60., 60., 60.], index=pd.to_datetime([
+            '2026-01-01 10:00', '2026-01-01 10:01',
+            '2026-01-01 11:00', '2026-01-01 11:01',
+        ]))
+        with patch('monitoring.power', return_value=values):
+            result = general_energy(MagicMock(), [34], 42, date(2026, 1, 1), date(2026, 1, 2), 1000)
+        self.assertAlmostEqual(result.iloc[0], 2.)
+
     def test_years_preset_sums_each_year(self):
         conn = MagicMock()
         conn.query.return_value = pd.DataFrame({
@@ -118,7 +158,7 @@ class MonitoringTests(unittest.TestCase):
         today = date.today()
         def query(sql, **kwargs):
             if 'FROM devices' in sql:
-                return pd.DataFrame({'device_id':[1, 2, 3], 'device_name':['Inversor', 'Medidor', 'Geral'], 'device_type':[1, 2, 3]})
+                return pd.DataFrame({'device_id':[1, 2, 3, 4], 'device_name':['Inversor', 'Medidor', 'Geral UTFPR', 'Geral Politec'], 'device_type':[1, 2, 3, 3]})
             if 'FROM measurement_type' in sql:
                 return pd.DataFrame({'measurement_type_id':[10], 'measurement_name':['Potência geral']})
             return pd.DataFrame({'time':pd.to_datetime([str(today)+' 10:00', str(today)+' 11:00']), 'device_id':[1, 1], 'measurement_type_id':[10, 10], 'value':[1000., 2000.]})
@@ -129,8 +169,11 @@ class MonitoringTests(unittest.TestCase):
             self.assertTrue(app.sidebar.get('page_link'))
             app.checkbox(key='enabled_2').check().run()
             app.checkbox(key='enabled_3').check().run()
-            app.selectbox(key='general_variable_True').set_value(10)
-            app.selectbox(key='general_unit_True').set_value('W').run()
+            self.assertNotIn('devices_3_Total', [widget.key for widget in app.multiselect])
+            self.assertFalse(any(widget.key.startswith('general_variable_') for widget in app.selectbox if widget.key))
+            power_queries = [call for call in conn.query.call_args_list if call.kwargs.get('params', {}).get('variable') == 42]
+            self.assertTrue(power_queries)
+            self.assertEqual(power_queries[-1].kwargs['params']['d0'], 34)
             self.assertFalse(app.exception)
             import json
             spec = json.loads(app.get('plotly_chart')[0].proto.spec)
