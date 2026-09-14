@@ -45,7 +45,9 @@ def analyze(conn, devices, start, end):
     devices = devices.loc[devices.device_type == kind]
     context = (kind, start, end)
     if st.session_state.get('analysis_context') != context:
-        for key in ['analysis_equipment', 'analysis_variables', 'analysis_applied', 'analysis_stats']:
+        st.session_state.analysis_equipment = []
+        st.session_state.analysis_variables = []
+        for key in ['analysis_applied', 'analysis_stats']:
             st.session_state.pop(key, None)
         st.session_state.analysis_context = context
     if devices.empty:
@@ -61,11 +63,10 @@ def analyze(conn, devices, start, end):
     variable_labels = {row.measurement_type_id: f'{row.measurement_name} · {row.measurement_type_id}' for row in catalog.itertuples()}
     variable_units = {variable_labels[row.measurement_type_id]: variable_unit(row.measurement_name)
                       for row in catalog.itertuples()}
-    default_ids = list(devices.device_id)
     with st.form('analysis_selection'):
         equipment_col, params_col = st.columns(2)
         with equipment_col:
-            draft_ids = st.multiselect('Equipamentos', list(device_labels), default=default_ids,
+            draft_ids = st.multiselect('Equipamentos', list(device_labels),
                                        format_func=lambda key: device_labels[key], key='analysis_equipment')
         with params_col:
             draft_variables = st.multiselect('Variáveis', list(variable_labels),

@@ -1,6 +1,7 @@
 """Identidade visual compartilhada do painel de energia da UTFPR."""
 from pathlib import Path
 from html import escape
+import base64
 
 import streamlit as st
 
@@ -9,8 +10,12 @@ def setup_page(title, description, compact=False):
     css = (Path(__file__).parent / "assets" / "theme.css").read_text()
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
     if compact:
-        st.markdown(f'<div class="dashboard-heading"><strong>{escape(title)}</strong>'
-                    '<span>UTFPR · Campus Pato Branco</span></div>', unsafe_allow_html=True)
+        logo = base64.b64encode((Path(__file__).parent / 'assets' / 'PB_RGB_72dpi_transparente.png').read_bytes()).decode('ascii')
+        st.markdown('<header class="dashboard-heading"><div class="dashboard-identity">'
+                    '<div class="dashboard-brand">Solar<span>Dash</span></div>'
+                    f'<h1>{escape(title)}</h1><p>{escape(description)}</p></div>'
+                    f'<img class="dashboard-logo" src="data:image/png;base64,{logo}" '
+                    'alt="UTFPR — Campus Pato Branco"></header>', unsafe_allow_html=True)
         return
     st.markdown('<div class="topline">CENTRAL DE MONITORAMENTO <span>UTFPR / PATO BRANCO</span></div>', unsafe_allow_html=True)
     st.markdown(f'<div class="hero"><div><div class="eyebrow">ENERGIA EM FOCO</div>'

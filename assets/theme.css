@@ -1,10 +1,14 @@
 :root { --navy: #102c4c; --orange: #f28b24; }
 [data-testid="stSidebarCollapseButton"] button { color: #ffffff; }
-.dashboard-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #dce4ed; }
-.dashboard-heading strong { font-size: 21px; }
-.dashboard-heading span { color: #63758b; font-size: 12px; }
-[data-testid="stMainBlockContainer"]:has(.dashboard-heading) { max-width: none; padding: 3rem 1.5rem 1rem; }
-[data-testid="stMainBlockContainer"]:has(.dashboard-heading) [data-testid="stVerticalBlock"] { gap: 0.65rem; }
+.dashboard-heading { display: flex; justify-content: space-between; align-items: center; gap: 32px; min-height: 160px; padding: 20px 0 28px; margin-bottom: 18px; border-bottom: 1px solid #d5dde5; letter-spacing: 0; }
+.dashboard-identity { min-width: 0; }
+.dashboard-brand { font-size: 19px; font-weight: 750; color: #30363d; margin-bottom: 10px; }
+.dashboard-brand span { color: #bd670c; }
+.dashboard-heading h1 { font-size: 32px; font-weight: 700; line-height: 1.2; padding: 0; margin: 0 0 8px; letter-spacing: 0; color: #202c38; }
+.dashboard-heading p { font-size: 14px; line-height: 1.5; color: #617080; margin: 0; }
+.dashboard-logo { display: block; width: 220px; height: 120px; object-fit: contain; flex-shrink: 0; }
+[data-testid="stMainBlockContainer"]:has(.dashboard-heading) { max-width: 1760px; padding: 3.5rem 3.5rem 3rem; }
+[data-testid="stMainBlockContainer"]:has(.dashboard-heading) [data-testid="stVerticalBlock"] { gap: 1rem; }
 .stApp { background: #f3f6fa; color: var(--navy); }
 [data-testid="stHeader"] { background: #f3f6fa; }
 [data-testid="stMainBlockContainer"] { max-width: 1600px; padding: 2rem 3rem 4rem; }
@@ -37,9 +41,18 @@
 [data-testid="stDownloadButton"] button { background: #102c4c; color: white; border: 0; border-radius: 9px; padding: 10px 20px; }
 [data-testid="stDownloadButton"] button:hover { background: #204d73; color: white; }
 @media (max-width: 760px) {
+ [data-testid="stMainBlockContainer"]:has(.dashboard-heading) { padding: 3rem 1.25rem 2rem; }
+ .dashboard-heading { gap: 20px; padding: 12px 0 22px; min-height: 140px; align-items: center; }
+ .dashboard-heading h1 { font-size: 26px; }
+ .dashboard-logo { width: 150px; height: 90px; }
+ .dashboard-brand { font-size: 17px; }
  [data-testid="stMainBlockContainer"] { padding: 1.5rem 1rem; }
  .hero { padding: 24px; } .hero-sun { display: none; }
  .topline { flex-wrap: wrap; font-size: 9px; }
+}
+@media (max-width: 480px) {
+ .dashboard-heading { flex-direction: column-reverse; align-items: flex-start; gap: 20px; }
+ .dashboard-logo { width: 156px; height: 86px; }
 }
 
 /* Seletor de período em três colunas, conforme a referência. */
