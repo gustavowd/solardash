@@ -121,7 +121,12 @@ def monitor(conn, devices, start, end):
                 divisor = 1000 if unit in ['W', 'Wh'] else 1
             selections.append((kind, label, ids, variable, divisor))
         if not daily:
-            grouping = st.selectbox('Agrupar barras por', ['Dia', 'Mês', 'Ano'], index=1 if (end-start).days > 62 else 0)
+            preset = st.session_state.get('period_applied_preset')
+            context = (start, end, preset)
+            if st.session_state.get('monitor_grouping_context') != context:
+                st.session_state.monitor_grouping = 'Ano' if preset == 'Anos' else ('Mês' if (end-start).days > 62 else 'Dia')
+                st.session_state.monitor_grouping_context = context
+            grouping = st.selectbox('Agrupar barras por', ['Dia', 'Mês', 'Ano'], key='monitor_grouping')
     with chart:
         series = {}
         with st.spinner('Carregando medições…'):
@@ -139,9 +144,13 @@ def monitor(conn, devices, start, end):
         frame.index = pd.to_datetime(frame.index)
         if not daily and grouping != 'Dia':
             frame = frame.resample('MS' if grouping == 'Mês' else 'YS').sum(min_count=1)
+            if grouping == 'Ano':
+                frame.index = frame.index.strftime('%Y')
         frame.index.name = 'Horário' if daily else 'Período'
         fig = px.line(frame) if daily else px.bar(frame, barmode='group')
         fig.update_layout(height=380, yaxis_title='Potência (kW)' if daily else 'Energia (kWh)')
+        if not daily and grouping == 'Ano':
+            fig.update_xaxes(type='category', title='Ano')
         render_chart(fig, use_container_width=True)
         st.download_button('↓ Download CSV', frame.to_csv(sep=';', decimal=',').encode('utf-8'), 'monitoramento.csv', 'text/csv')
         if not daily:

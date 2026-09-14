@@ -10,6 +10,31 @@ from analysis import variable_catalog
 
 
 class MonitoringTests(unittest.TestCase):
+    def test_years_preset_sums_each_year(self):
+        conn = MagicMock()
+        conn.query.return_value = pd.DataFrame({
+            'device_id': [1], 'device_name': ['Inversor'], 'device_type': [1],
+        })
+        readings = pd.Series([10., 20., 40.], index=pd.to_datetime([
+            '2024-04-01', '2024-12-01', '2025-02-01',
+        ]))
+        with patch('streamlit.connection', return_value=conn), \
+                patch('monitoring.energy', return_value=readings), \
+                patch('monitoring.render_chart') as render:
+            app = AppTest.from_file(str(Path(__file__).resolve().parents[1] / 'Totalizadores.py'))
+            app.session_state.monitor_period = (date(2024, 1, 1), date(2025, 12, 31))
+            app.session_state.period_applied_preset = 'Período de Meses'
+            app.run()
+            self.assertEqual(app.selectbox(key='monitor_grouping').value, 'Mês')
+            app.session_state.period_applied_preset = 'Anos'
+            app.run()
+            self.assertFalse(app.exception)
+            self.assertEqual(app.selectbox(key='monitor_grouping').value, 'Ano')
+            fig = render.call_args.args[0]
+            self.assertEqual(list(fig.data[0].x), ['2024', '2025'])
+            self.assertEqual(list(fig.data[0].y), [30., 40.])
+            self.assertEqual(fig.layout.xaxis.type, 'category')
+
     def test_catalog_does_not_scan_measurements(self):
         conn = MagicMock()
         variable_catalog(conn)
