@@ -174,6 +174,18 @@ def monitor(conn, devices, start, end):
         frame.index.name = 'Horário' if daily else 'Período'
         fig = px.line(frame) if daily else px.bar(frame, barmode='group')
         fig.update_layout(height=380, yaxis_title='Potência (kW)' if daily else 'Energia (kWh)')
+        if daily:
+            for trace in fig.data:
+                if trace.name == 'Geração':
+                    trace.update(
+                        line=dict(color='#f97316'), # Força a cor laranja da Geração
+                        fill='tozeroy',
+                        fillcolor='rgba(249, 115, 22, 0.12)'
+                    )
+                elif trace.name == 'Consumo':
+                    trace.update(line=dict(color='#3b82f6')) # Azul para Consumo (opcional)
+                elif trace.name == 'Consumo geral':
+                    trace.update(line=dict(color='#10b981')) # Verde para Consumo geral (opcional)
         if not daily and grouping == 'Ano':
             fig.update_xaxes(type='category', title='Ano')
         render_chart(fig, use_container_width=True)
