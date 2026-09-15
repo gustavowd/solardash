@@ -101,7 +101,10 @@ def power_energy_daily(values):
 def equipment(devices, kind):
     available = devices[devices.device_type == kind]
     labels = dict(zip(available.device_id, available.device_name))
-    initial_ids = list(labels)
+    if kind == 1:
+        initial_ids = [key for key, name in labels.items() if 'huawei' in name.casefold()]
+    else:
+        initial_ids = list(labels)
     if kind == 3:
         initial_ids = [key for key, name in labels.items()
                        if 'geral' in name.casefold() and 'utfpr' in name.casefold()][:1]
