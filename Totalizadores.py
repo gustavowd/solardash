@@ -8,6 +8,39 @@ from monitoring import monitor
 from analysis import analyze
 from periods import period_selector
 
+# 1. Configuração global da página (geralmente fica na primeira linha executável)
+st.set_page_config(
+    page_title="SolarDash",
+    layout="wide",
+    page_icon=":material/solar_power:"
+)
+
+# 2. Injeção do CSS para reduzir o espaço em branco superior
+st.markdown(
+    """
+    <style>
+        /* Cola o conteúdo principal bem no topo da página */
+        .block-container {
+            padding-top: 0.5rem !important;
+            padding-bottom: 1rem !important;
+            max-width: 100% !important;
+        }
+
+        /* Remove completamente a barra de cabeçalho padrão do Streamlit */
+        header[data-testid="stHeader"] {
+            display: none !important;
+            height: 0px !important;
+        }
+
+        /* Remove margens extras do topo geradas por elementos vazios */
+        div.block-container > div:first-child {
+            margin-top: 0px !important;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 def overview():
     setup_page('Visão geral', 'Geração e consumo do campus', compact=True)
     nav, period = st.columns([3, 2])
