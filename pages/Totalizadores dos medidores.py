@@ -1,21 +1,15 @@
+from ui import setup_page, period_selector, render_chart
 import streamlit as st
 import pandas as pd
 import datetime
 import plotly.express as px
 import calendar
-import extra_streamlit_components as stx
 
-st.set_page_config(
-    page_title="Sistema de monitoramento energético do Campus Pato Branco da UTFPR",
-    layout="wide"
-)
+setup_page('Consumo consolidado', 'Visualize o consumo de energia por transformador e compare os períodos de análise.')
 
 #tab1, tab2, tab3 = st.tabs(["📈 Dia", "Mês", "Ano"])
 
-chosen_id = stx.tab_bar(data=[stx.TabBarItemData(id="tab1", title="📈 Dia", description="Total de consumo no dia"),
-                            stx.TabBarItemData(id="tab2", title="Mês", description="Total de consumo no mês"),
-                            stx.TabBarItemData(id="tab3", title="Ano", description="Total de consumo no ano")],
-                            default="tab1")
+chosen_id = period_selector()
 
 #with tab1:
 if chosen_id == "tab1":
@@ -133,7 +127,7 @@ if chosen_id == "tab1":
             height=500)
 
         # Plot!
-        st.plotly_chart(fig, use_container_width=True)
+        render_chart(fig, use_container_width=True)
         
         csv = chart_data.to_csv(index=True, sep=";", decimal=",").encode('utf-8')
         st.download_button(
@@ -364,7 +358,7 @@ elif chosen_id == "tab2":
         height=500)
 
     # Plot!
-    st.plotly_chart(fig, use_container_width=True)
+    render_chart(fig, use_container_width=True)
 
     csv = chart_data.to_csv(index=True, sep=";", decimal=",").encode('utf-8')
     st.download_button(
@@ -483,7 +477,7 @@ elif chosen_id == "tab3":
     #    height=500)
 
     # Plot!
-    #st.plotly_chart(fig, use_container_width=True)
+    #render_chart(fig, use_container_width=True)
 
     # Se chart_data for uma Series, vamos resetar o índice
     df_plot = chart_data.reset_index()
@@ -512,7 +506,7 @@ elif chosen_id == "tab3":
         height=500
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    render_chart(fig, use_container_width=True)
 
 
     csv = chart_data.to_csv(index=True, sep=";", decimal=",").encode('utf-8')
