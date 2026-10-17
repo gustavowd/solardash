@@ -101,7 +101,10 @@ def power_energy_daily(values):
 def equipment(devices, kind):
     available = devices[devices.device_type == kind]
     labels = dict(zip(available.device_id, available.device_name))
-    initial_ids = list(labels)
+    if kind == 1:
+        initial_ids = [key for key, name in labels.items() if 'huawei' in name.casefold()]
+    else:
+        initial_ids = list(labels)
     if kind == 3:
         initial_ids = [key for key, name in labels.items()
                        if 'geral' in name.casefold() and 'utfpr' in name.casefold()][:1]
@@ -174,6 +177,18 @@ def monitor(conn, devices, start, end):
         frame.index.name = 'Horário' if daily else 'Período'
         fig = px.line(frame) if daily else px.bar(frame, barmode='group')
         fig.update_layout(height=380, yaxis_title='Potência (kW)' if daily else 'Energia (kWh)')
+        if daily:
+            for trace in fig.data:
+                if trace.name == 'Geração':
+                    trace.update(
+                        line=dict(color='#f97316'), # Força a cor laranja da Geração
+                        fill='tozeroy',
+                        fillcolor='rgba(249, 115, 22, 0.12)'
+                    )
+                elif trace.name == 'Consumo':
+                    trace.update(line=dict(color='#3b82f6')) # Azul para Consumo (opcional)
+                elif trace.name == 'Consumo geral':
+                    trace.update(line=dict(color='#10b981')) # Verde para Consumo geral (opcional)
         if not daily and grouping == 'Ano':
             fig.update_xaxes(type='category', title='Ano')
         render_chart(fig, use_container_width=True)
