@@ -1,5 +1,5 @@
 """Análise de variáveis individuais, preservando os valores do banco."""
-from datetime import timedelta
+from datetime import timedelta, timezone
 import re
 import pandas as pd
 import plotly.express as px
@@ -89,7 +89,10 @@ def analyze(conn, devices, start, end):
         st.info('Não há leituras para os equipamentos, variáveis e período selecionados.')
         return
     data = data.copy()
-    data['time'] = pd.to_datetime(data.time)
+    # Leituras sem fuso no banco estão em GMT; exiba e exporte em GMT-3.
+    data['time'] = (pd.to_datetime(data.time, utc=True)
+                    .dt.tz_convert(timezone(timedelta(hours=-3)))
+                    .dt.tz_localize(None))
     data['Equipamento'] = data.device_id.map(device_labels)
     data['Parâmetro'] = data.measurement_type_id.map(variable_labels)
     data['Série'] = data['Equipamento'] + ' — ' + data['Parâmetro']
@@ -102,7 +105,7 @@ def analyze(conn, devices, start, end):
         # Painéis separados evitam comparar tensão e potência na mesma escala.
         facet = 'Parâmetro' if data['Parâmetro'].nunique() > 1 else None
         fig = px.line(data, x='time', y='value', color='Série', facet_row=facet,
-                      labels={'time': 'Horário', 'value': 'Valor de origem'})
+                      labels={'time': 'Horário (GMT-3)', 'value': 'Valor de origem'})
         fig.update_layout(height=max(380, 240*data['Parâmetro'].nunique()),
                           yaxis_title='Valor de origem')
         if facet:
